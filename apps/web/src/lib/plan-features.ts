@@ -32,7 +32,7 @@ export const FEATURE_LIMITS: FeatureLimit[] = [
   {
     feature: 'products',
     minPlan: 'FREE',
-    limit: { FREE: 10, PRO: null, ENTERPRISE: null },
+    limit: { FREE: 75, PRO: null, ENTERPRISE: null },
     description: 'عدد المنتجات',
     upgradeHint: 'ارفع خطتك لإضافة منتجات أكثر',
   },
