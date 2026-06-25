@@ -54,11 +54,12 @@ router.post('/', ...merchant,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const storeId = await resolveStoreId(req);
-      const user = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { plan: true } });
+      const userId = req.user?.userId;
+      const user = userId ? await prisma.user.findUnique({ where: { id: userId }, select: { plan: true } }) : null;
       if (user?.plan === 'FREE') {
         const count = await prisma.product.count({ where: { storeId } });
-        if (count >= 10) {
-          res.status(403).json({ success: false, error: 'وصلت إلى الحد الأقصى للخطة المجانية (10 منتجات). ارفع خطتك لإضافة منتجات أكثر.' });
+        if (count >= 75) {
+          res.status(403).json({ success: false, error: 'وصلت إلى الحد الأقصى للخطة المجانية 75 منتج. ارفع خطتك لإضافة منتجات أكثر.' });
           return;
         }
       }
