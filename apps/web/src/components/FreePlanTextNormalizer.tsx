@@ -16,7 +16,7 @@ function normalizeNodeText(node: Node) {
   if (nextValue !== node.nodeValue) node.nodeValue = nextValue;
 }
 
-function normalizeVisibleText(root: ParentNode = document.body) {
+function normalizeVisibleText(root: Node = document.body) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node = walker.nextNode();
   while (node) {
