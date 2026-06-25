@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Tajawal, Cairo } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
+import { FreePlanTextNormalizer } from '@/components/FreePlanTextNormalizer';
 
 const tajawal = Tajawal({
   subsets: ['arabic', 'latin'],
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl">
       <body className={`${tajawal.variable} ${cairo.variable} font-[family-name:var(--font-tajawal)]`}>
         {children}
+        <FreePlanTextNormalizer />
         <Toaster richColors position="top-left" />
       </body>
     </html>
