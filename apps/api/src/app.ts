@@ -17,7 +17,6 @@ import checkoutRoutes from './routes/checkout';
 import storefrontRoutes from './routes/storefront';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
-import aiRoutes from './routes/ai';
 import couponRoutes from './routes/coupons';
 import chatRoutes from './routes/chat';
 import affiliateRoutes from './routes/affiliates';
@@ -146,7 +145,6 @@ export function createApp() {
   app.use('/api/storefront', storefrontRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/upload', uploadRoutes);
-  app.use('/api/ai', aiRoutes);
   app.use('/api/coupons', couponRoutes);
   app.use('/api/chat', chatRoutes);
   app.use('/api/affiliates', affiliateRoutes);
