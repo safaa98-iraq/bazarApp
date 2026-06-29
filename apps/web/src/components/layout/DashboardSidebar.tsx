@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, Package, ShoppingCart, Settings, Palette, LogOut, Sparkles, Store,
+  LayoutDashboard, Package, ShoppingCart, Settings, Palette, LogOut, Store,
   MessageCircle, Lock, Zap, Crown, Menu, X, Megaphone, Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,7 +27,7 @@ const links: NavLink[] = [
   { href: '/dashboard/categories',  label: 'التصنيفات',       desc: 'أنشئ تصنيفات تظهر في رأس متجرك',          icon: Tag },
   { href: '/dashboard/orders',      label: 'الطلبات',         desc: 'تابع طلبات عملائك وحدّث حالتها',         icon: ShoppingCart },
   { href: '/dashboard/chat',        label: 'رسائل العملاء',   desc: 'تحدث مع عملائك مباشرة من متجرك',              icon: MessageCircle, feature: 'chat' },
-  { href: '/dashboard/builder',     label: 'شكل المتجر',      desc: 'صمّم متجرك وأضف البانرات الإعلانية',          icon: Palette },
+  { href: '/dashboard/builder',     label: 'شكل المتجر',      desc: 'صمّم متجرك وأضف البانرات الترويجية',          icon: Palette },
   { href: '/dashboard/marketing',   label: 'التسويق',         desc: 'كوبونات الخصم والمسوقون بالعمولة',            icon: Megaphone, feature: 'affiliates' },
   { href: '/dashboard/settings',    label: 'إعدادات المتجر',  desc: 'اسم المتجر، العملة، الشعار، والرابط',         icon: Settings },
   { href: '/dashboard/upgrade',     label: 'الباقات والترقية', desc: 'قارن الباقات وارفع خطتك بضغطة واحدة',        icon: Crown },
@@ -153,28 +153,6 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           );
         })}
       </nav>
-
-      {/* AI Credits */}
-      <div className="mx-3 mb-3 rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.07)' }}>
-        <div className="flex items-center gap-2 mb-1.5">
-          <Sparkles className="h-3.5 w-3.5" style={{ color: '#E8BCB9' }} />
-          <span className="text-xs font-semibold" style={{ color: '#E8BCB9' }}>رصيد الذكاء الاصطناعي</span>
-        </div>
-        {canUseFeature(plan, 'ai') ? (
-          <>
-            <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div className="h-full rounded-full w-3/5" style={{ background: '#AE445A' }} />
-            </div>
-            <p className="text-xs mt-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              30 طلب متبقي اليوم — يُستخدم لكتابة الأوصاف والاقتراحات
-            </p>
-          </>
-        ) : (
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            يساعدك على كتابة أوصاف المنتجات تلقائياً — متاح في PRO
-          </p>
-        )}
-      </div>
 
       {/* User + logout */}
       <div className="p-3 border-t border-white/10">
