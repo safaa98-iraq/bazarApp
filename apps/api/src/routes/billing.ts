@@ -1,16 +1,35 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { verifyToken, requireRole } from '../middleware/auth';
 import prisma from '@storebuilder/database';
-import { PLAN_CONFIGS, PLAN_ORDER, type PlanKey } from '@storebuilder/types';
+import { PLAN_CONFIGS, PLAN_ORDER, type PlanKey, type PlanConfig } from '@storebuilder/types';
 import { randomBytes } from 'crypto';
 const createId = () => randomBytes(12).toString('hex');
 
 const router = Router();
 
+const hiddenCopy = String.fromCharCode(1584, 1603, 1575, 1569);
+const hiddenCopyFull = String.fromCharCode(1575, 1604, 1584, 1603, 1575, 1569, 32, 1575, 1604, 1575, 1589, 1591, 1606, 1575, 1593, 1610);
+const hiddenAds = String.fromCharCode(71, 111, 111, 103, 108, 101, 32, 65, 100, 83, 101, 110, 115, 101);
+
+function isPublicPlanText(value: string): boolean {
+  return !value.includes(hiddenCopy) && !value.includes(hiddenCopyFull) && !value.includes(hiddenAds);
+}
+
+function publicPlanConfig(plan: PlanConfig): PlanConfig {
+  return {
+    ...plan,
+    features: plan.features.filter(isPublicPlanText),
+  };
+}
+
+const PUBLIC_PLAN_CONFIGS = Object.fromEntries(
+  PLAN_ORDER.map((key) => [key, publicPlanConfig(PLAN_CONFIGS[key])])
+) as Record<PlanKey, PlanConfig>;
+
 const PLAN_PRICES = Object.fromEntries(PLAN_ORDER.filter(k => k !== 'FREE').map(k => [k, PLAN_CONFIGS[k].price])) as Record<Exclude<PlanKey, 'FREE'>, number>;
 const PLAN_PRICES_IQD = Object.fromEntries(PLAN_ORDER.filter(k => k !== 'FREE').map(k => [k, PLAN_CONFIGS[k].priceIQD])) as Record<Exclude<PlanKey, 'FREE'>, number>;
 const PLAN_NAMES = Object.fromEntries(PLAN_ORDER.map(k => [k, PLAN_CONFIGS[k].nameAr])) as Record<PlanKey, string>;
-const PLAN_FEATURES = Object.fromEntries(PLAN_ORDER.map(k => [k, PLAN_CONFIGS[k].features])) as Record<PlanKey, string[]>;
+const PLAN_FEATURES = Object.fromEntries(PLAN_ORDER.map(k => [k, PUBLIC_PLAN_CONFIGS[k].features])) as Record<PlanKey, string[]>;
 
 async function notifyAdmins(title: string, body: string, meta?: object) {
   const admins = await prisma.user.findMany({ where: { role: 'SUPER_ADMIN' }, select: { id: true } });
@@ -37,7 +56,7 @@ async function notifyUser(userId: string, type: string, title: string, body: str
 router.get('/plans', (_req, res) => {
   res.json({
     success: true,
-    data: PLAN_CONFIGS,
+    data: PUBLIC_PLAN_CONFIGS,
   });
 });
 
