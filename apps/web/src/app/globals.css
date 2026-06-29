@@ -197,6 +197,12 @@
 .bento-tall  { grid-row: span 2; }
 .bento-sqr   { grid-column: span 1; grid-row: span 1; }
 
+/* ─── Removed feature controls ─── */
+a[href="/dashboard/settings?tab=billing"].font-semibold,
+a[href="/dashboard/settings?tab=billing"].inline-flex.border {
+  display: none !important;
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 1024px) {
   .bento-grid { grid-template-columns: repeat(2, 1fr); }
@@ -258,89 +264,4 @@
     grid-template-columns: 1fr 1fr !important;
     gap: 12px !important;
   }
-
-  /* Feature tabs — scrollable row */
-  .lp-feature-tabs {
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-    gap: 8px !important;
-  }
-
-  /* Templates grid — single column */
-  .lp-templates-grid {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-
-  /* Deep dive sections — stack */
-  .lp-deepdive-row {
-    flex-direction: column !important;
-    gap: 24px !important;
-  }
-
-  /* Testimonial grid */
-  .lp-testimonial-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Integration chips wrap */
-  .lp-integrations-row {
-    flex-wrap: wrap !important;
-    gap: 10px !important;
-  }
-
-  /* CTA section padding */
-  .lp-cta-section {
-    padding: 64px 20px !important;
-  }
-}
-
-/* ─── Mobile: Storefront ─── */
-@media (max-width: 767px) {
-  .sf-product-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
-  }
-  .sf-hero        { padding: 40px 20px !important; }
-  .sf-categories  { gap: 8px !important; }
-}
-
-/* ─── Tablet (768–1023px): sidebar still hidden, push content up ─── */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .lp-templates-grid { grid-template-columns: repeat(2, 1fr) !important; }
-  .sf-product-grid   { grid-template-columns: repeat(3, 1fr) !important; }
-}
-
-/* ─── Dashboard mobile top-bar spacing ─── */
-@media (max-width: 1023px) {
-  /* Cards and page headers need top breathing room because of the fixed nav bar */
-  .dash-page-header { padding-top: 0 !important; }
-}
-
-/* ─── Upgrade page — plan cards stack on mobile ─── */
-@media (max-width: 767px) {
-  .upgrade-plan-cards { flex-direction: column !important; }
-}
-
-/* ─── General touch targets ─── */
-@media (max-width: 767px) {
-  button, a { min-height: 44px; }
-  input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
-}
-
-/* ─── Utilities ─── */
-@layer utilities {
-  .brand-gradient { background: linear-gradient(135deg, #432E54 0%, #4B4376 50%, #AE445A 100%); }
-  .brand-gradient-soft { background: linear-gradient(135deg, #F5F0FA 0%, #EDE8F5 100%); }
-  .text-brand         { color: #432E54; }
-  .text-brand-accent  { color: #AE445A; }
-  .bg-brand           { background-color: #432E54; }
-  .bg-brand-accent    { background-color: #AE445A; }
-  .bg-brand-surface   { background-color: #F5F0FA; }
-  .panel-card { @apply bg-white rounded-2xl border border-[#E8E0F0] shadow-sm; }
-  .card-hover { @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5; }
-  .btn-primary { @apply bg-brand text-white rounded-xl px-5 py-2.5 font-semibold text-sm transition hover:opacity-90 active:scale-95; }
-  .btn-accent  { @apply bg-brand-accent text-white rounded-xl px-5 py-2.5 font-semibold text-sm transition hover:opacity-90 active:scale-95; }
 }
