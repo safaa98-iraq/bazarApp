@@ -35,8 +35,8 @@ function hideElementForNode(node: Node) {
   if (!HIDE_PATTERNS.some(pattern => text.includes(pattern))) return;
   const parent = node.parentElement;
   if (!parent) return;
-  const target = parent.closest('button, a, tr, li, div');
-  if (target && target !== document.body && target instanceof HTMLElement) {
+  const target = (parent.closest('tr') ?? parent.closest('button, a, li, div')) as HTMLElement | null;
+  if (target && target !== document.body) {
     target.style.display = 'none';
   }
 }
