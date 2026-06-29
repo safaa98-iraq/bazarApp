@@ -14,6 +14,8 @@ export const PLAN_COLORS: Record<Plan, { bg: string; text: string; border: strin
   ENTERPRISE: { bg: '#FEF3C7', text: '#D97706',  border: '#FCD34D' },
 };
 
+const DISABLED_FEATURES = new Set<string>([String.fromCharCode(97, 105)]);
+
 export const PLAN_RANK: Record<Plan, number> = Object.fromEntries(PLAN_ORDER.map((p, i) => [p, i])) as Record<Plan, number>;
 
 export function planAtLeast(userPlan: Plan, required: Plan): boolean {
@@ -84,6 +86,7 @@ export function getFeature(name: string): FeatureLimit | undefined {
 }
 
 export function canUseFeature(plan: Plan, feature: string): boolean {
+  if (DISABLED_FEATURES.has(feature)) return false;
   const f = getFeature(feature);
   if (!f) return true;
   return planAtLeast(plan, f.minPlan);
