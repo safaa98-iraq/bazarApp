@@ -44,13 +44,6 @@ export const FEATURE_LIMITS: FeatureLimit[] = [
     upgradeHint: 'ارفع خطتك لإضافة تصنيفات غير محدودة',
   },
   {
-    feature: 'ai',
-    minPlan: 'PRO',
-    limit: { FREE: 0, PRO: 30, ENTERPRISE: 500 },
-    description: 'ميزات الذكاء الاصطناعي',
-    upgradeHint: 'ارفع إلى الخطة الاحترافية لاستخدام الذكاء الاصطناعي',
-  },
-  {
     feature: 'analytics',
     minPlan: 'PRO',
     description: 'تحليلات المتجر',
