@@ -253,21 +253,27 @@ export interface AnalyticsData {
 }
 
 export interface TopStore {
-  id: string;
-  name: string;
+  id?: string;
+  name?: string;
+  storeId?: string;
+  storeName?: string;
   slug?: string;
   revenue?: number;
   orders?: number;
   views?: number;
+  totalRevenue?: number;
+  totalOrders?: number;
   [key: string]: unknown;
 }
 
 export interface CreateCouponDto {
   code: string;
-  type?: 'percent' | 'fixed' | string;
-  value: number;
-  minOrderAmount?: number;
-  usageLimit?: number;
+  label?: string | null;
+  affiliateId?: string | null;
+  discountType: 'percent' | 'fixed' | string;
+  discountValue: number;
+  minOrderAmount?: number | null;
+  maxUses?: number | null;
   expiresAt?: string;
   isActive?: boolean;
 }
@@ -276,21 +282,22 @@ export interface CouponPublic {
   id: string;
   storeId: string;
   code: string;
-  type: string;
-  value: number;
+  label?: string | null;
+  affiliateId?: string | null;
+  discountType: 'percent' | 'fixed' | string;
+  discountValue: number;
   minOrderAmount?: number | null;
-  usageLimit?: number | null;
-  usedCount?: number;
+  maxUses?: number | null;
+  usedCount: number;
   expiresAt?: string | null;
   isActive: boolean;
   createdAt: string;
 }
 
 export interface ApplyCouponResult {
-  valid: boolean;
-  discount: number;
-  coupon?: CouponPublic;
-  error?: string;
+  coupon: CouponPublic;
+  discountAmount: number;
+  finalTotal: number;
 }
 
 export interface AffiliatePublic {
