@@ -24,8 +24,6 @@ export interface AuthResponse {
   user: UserPublic;
 }
 
-// ─── User ─────────────────────────────────────────────────────────────────────
-
 export interface UserPublic {
   id: string;
   email: string;
@@ -35,8 +33,6 @@ export interface UserPublic {
   isActive: boolean;
   createdAt: string;
 }
-
-// ─── Store ────────────────────────────────────────────────────────────────────
 
 export interface CreateStoreDto {
   name: string;
@@ -70,8 +66,6 @@ export interface StoreTypeConfig {
   themeColor: string;
   templateHint: string;
 }
-
-// ─── Plans ───────────────────────────────────────────────────────────────────
 
 export type PlanKey = 'FREE' | 'PRO' | 'ENTERPRISE';
 
@@ -155,8 +149,6 @@ export const PLAN_COMPARISON: PlanComparisonRow[] = [
   { label: 'دعم عبر الواتساب', FREE: false, PRO: true, ENTERPRISE: true },
 ];
 
-// ─── Storefront/public models ────────────────────────────────────────────────
-
 export interface CategoryPublic {
   id: string;
   storeId: string;
@@ -200,15 +192,8 @@ export interface StorePublic {
   storeType: string;
   currency: string;
   createdAt: string;
-  merchant?: {
-    id: string;
-    name: string;
-    email: string;
-    plan: string;
-  };
+  merchant?: { id: string; name: string; email: string; plan: string };
 }
-
-// ─── Product DTOs ────────────────────────────────────────────────────────────
 
 export interface CreateProductDto {
   name: string;
@@ -227,26 +212,9 @@ export interface CreateProductDto {
   seoSlug?: string;
 }
 
-export interface UpdateProductDto {
-  name?: string;
-  description?: string;
-  price?: number;
-  comparePrice?: number;
-  stock?: number;
-  categoryId?: string;
-  images?: string[];
-  isActive?: boolean;
-  unit?: string;
-  unitType?: string;
-  unitLabel?: string;
-  seoTitle?: string;
-  seoDescription?: string;
-  seoSlug?: string;
-}
+export interface UpdateProductDto extends Partial<CreateProductDto> {}
 
-// ─── Orders ──────────────────────────────────────────────────────────────────
-
-export type OrderStatusType = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+export type OrderStatusType = 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 export interface CreateOrderDto {
   storeId: string;
@@ -254,10 +222,7 @@ export interface CreateOrderDto {
   customerName: string;
   shippingAddress: Record<string, unknown>;
   stripePaymentId?: string;
-  items: Array<{
-    productId: string;
-    quantity: number;
-  }>;
+  items: Array<{ productId: string; quantity: number }>;
 }
 
 export interface OrderPublic {
@@ -271,17 +236,62 @@ export interface OrderPublic {
   shippingAddress: Record<string, unknown>;
   stripePaymentId: string | null;
   createdAt: string;
-  items: Array<{
-    id: string;
-    productId: string;
-    quantity: number;
-    price: number;
-    product?: { name: string; images: unknown };
-  }>;
+  items: Array<{ id: string; productId: string; quantity: number; price: number; product?: { name: string; images: unknown } }>;
   store?: { name: string; slug: string };
 }
 
-// ─── Marketing / chat ────────────────────────────────────────────────────────
+export type AdminActionType = 'LOGIN' | 'CREATE' | 'UPDATE' | 'DELETE' | 'SUSPEND' | 'ACTIVATE' | 'PLAN_CHANGE' | string;
+
+export interface AnalyticsData {
+  revenue?: number;
+  orders?: number;
+  products?: number;
+  customers?: number;
+  views?: number;
+  conversionRate?: number;
+  [key: string]: unknown;
+}
+
+export interface TopStore {
+  id: string;
+  name: string;
+  slug?: string;
+  revenue?: number;
+  orders?: number;
+  views?: number;
+  [key: string]: unknown;
+}
+
+export interface CreateCouponDto {
+  code: string;
+  type?: 'percent' | 'fixed' | string;
+  value: number;
+  minOrderAmount?: number;
+  usageLimit?: number;
+  expiresAt?: string;
+  isActive?: boolean;
+}
+
+export interface CouponPublic {
+  id: string;
+  storeId: string;
+  code: string;
+  type: string;
+  value: number;
+  minOrderAmount?: number | null;
+  usageLimit?: number | null;
+  usedCount?: number;
+  expiresAt?: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface ApplyCouponResult {
+  valid: boolean;
+  discount: number;
+  coupon?: CouponPublic;
+  error?: string;
+}
 
 export interface AffiliatePublic {
   id: string;
