@@ -122,7 +122,7 @@ export const PLAN_CONFIGS: Record<PlanKey, PlanConfig> = {
     categories: 20,
     badge: 'الأكثر طلباً',
     subtitle: 'للنمو',
-    features: ['منتجات غير محدودة', '20 تصنيف',  'تحليلات متقدمة', 'أولوية دعم  ', 'رصيد ذكاء اصطناعي' ,'كوبونات غير محدودة'],
+    features: ['منتجات غير محدودة', '20 تصنيف', 'تحليلات متقدمة', 'أولوية دعم', 'كوبونات غير محدودة'],
   },
   ENTERPRISE: {
     key: 'ENTERPRISE',
@@ -134,7 +134,7 @@ export const PLAN_CONFIGS: Record<PlanKey, PlanConfig> = {
     products: -1,
     categories: -1,
     subtitle: 'للتوسع',
-    features: ['كل مميزات الاحترافية', 'تقارير Excel تلقائية' , 'نطاق مخصص','اضافة كل انواع المنتجات', 'رصيد ذكاء اصطناعي اكثر بزيادة 5X '],
+    features: ['كل مميزات الاحترافية', 'تقارير Excel تلقائية', 'نطاق مخصص', 'إضافة كل أنواع المنتجات'],
   },
 };
 
@@ -145,19 +145,143 @@ export const PLAN_COMPARISON: PlanComparisonRow[] = [
   { label: 'رابط المتجر (bazar.iq/store)', FREE: true, PRO: true, ENTERPRISE: true },
   { label: 'نطاق مخصص', sub: 'مثل: myshop.com', FREE: false, PRO: false, ENTERPRISE: true },
   { label: 'تخصيص شكل المتجر', FREE: true, PRO: true, ENTERPRISE: true },
-  { label: 'بانرات وإعلانات ترويجية', FREE: true, PRO: true, ENTERPRISE: true },
+  { label: 'بانرات ترويجية', FREE: true, PRO: true, ENTERPRISE: true },
   { label: 'قوالب تصميم متعددة', FREE: '1', PRO: '5+', ENTERPRISE: '5+' },
   { label: 'رفع صور المنتجات', FREE: true, PRO: true, ENTERPRISE: true },
   { label: 'كوبونات الخصم', FREE: '2 كوبون', PRO: 'غير محدود', ENTERPRISE: 'غير محدود' },
   { label: 'المسوقون بالعمولة', sub: 'تتبع المبيعات عبر روابط خاصة', FREE: false, PRO: '10 مسوق', ENTERPRISE: 'غير محدود' },
   { label: 'إشعارات الطلبات', FREE: true, PRO: true, ENTERPRISE: true },
-  { label: 'كتابة أوصاف المنتجات بالذكاء الاصطناعي', FREE: false, PRO: '30/يوم', ENTERPRISE: '500/يوم', highlight: true },
-  { label: 'اقتراحات المنتجات للعملاء', FREE: false, PRO: true, ENTERPRISE: true },
   { label: 'تحليلات المتجر', FREE: false, PRO: true, ENTERPRISE: true },
   { label: 'دعم عبر الواتساب', FREE: false, PRO: true, ENTERPRISE: true },
-  { label: 'إعلانات Google AdSense', sub: 'تظهر في متجرك', FREE: 'تظهر', PRO: false, ENTERPRISE: false },
 ];
 
+// ─── Storefront/public models ────────────────────────────────────────────────
+
+export interface CategoryPublic {
+  id: string;
+  storeId: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  createdAt?: string;
+}
+
+export interface ProductPublic {
+  id: string;
+  storeId: string;
+  name: string;
+  description: string | null;
+  price: number;
+  comparePrice: number | null;
+  images: string[];
+  stock: number;
+  categoryId: string | null;
+  isActive: boolean;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoSlug?: string | null;
+  unit?: string;
+  unitLabel?: string;
+  createdAt: string;
+  category?: CategoryPublic | { id: string; storeId: string; name: string; slug: string } | null;
+}
+
+export interface StorePublic {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logo: string | null;
+  theme: string;
+  template: string;
+  isActive: boolean;
+  isPublished: boolean;
+  builderConfig?: string | null;
+  storeType: string;
+  currency: string;
+  createdAt: string;
+  merchant?: {
+    id: string;
+    name: string;
+    email: string;
+    plan: string;
+  };
+}
+
+// ─── Product DTOs ────────────────────────────────────────────────────────────
+
+export interface CreateProductDto {
+  name: string;
+  description?: string;
+  price: number;
+  comparePrice?: number;
+  stock: number;
+  categoryId?: string;
+  images?: string[];
+  isActive?: boolean;
+  unit?: string;
+  unitType?: string;
+  unitLabel?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoSlug?: string;
+}
+
+export interface UpdateProductDto {
+  name?: string;
+  description?: string;
+  price?: number;
+  comparePrice?: number;
+  stock?: number;
+  categoryId?: string;
+  images?: string[];
+  isActive?: boolean;
+  unit?: string;
+  unitType?: string;
+  unitLabel?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoSlug?: string;
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+export type OrderStatusType = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+
+export interface CreateOrderDto {
+  storeId: string;
+  customerEmail: string;
+  customerName: string;
+  shippingAddress: Record<string, unknown>;
+  stripePaymentId?: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
+}
+
+export interface OrderPublic {
+  id: string;
+  storeId: string;
+  customerId: string | null;
+  customerEmail: string;
+  customerName: string;
+  total: number;
+  status: OrderStatusType;
+  shippingAddress: Record<string, unknown>;
+  stripePaymentId: string | null;
+  createdAt: string;
+  items: Array<{
+    id: string;
+    productId: string;
+    quantity: number;
+    price: number;
+    product?: { name: string; images: unknown };
+  }>;
+  store?: { name: string; slug: string };
+}
+
+// ─── Marketing / chat ────────────────────────────────────────────────────────
 
 export interface AffiliatePublic {
   id: string;
@@ -207,54 +331,4 @@ export interface QuickReplyPublic {
   storeId: string;
   title: string;
   body: string;
-}
-
-export interface StorePublic {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  logo: string | null;
-  theme: string;
-  template: string;
-  isActive: boolean;
-  isPublished: boolean;
-  builderConfig?: string | null;
-  storeType: string;
-  currency: string;
-  createdAt: string;
-  merchant?: {
-    id: string;
-    name: string;
-    email: string;
-    plan: string;
-  };
-}
-
-// ─── Product ──────────────────────────────────────────────────────────────────
-
-export interface CreateProductDto {
-  name: string;
-  description?: string;
-  price: number;
-  comparePrice?: number;
-  stock: number;
-  categoryId?: string;
-  images?: string[];
-  isActive?: boolean;
-  unitType?: string;
-  unitLabel?: string;
-}
-
-export interface UpdateProductDto {
-  name?: string;
-  description?: string;
-  price?: number;
-  comparePrice?: number;
-  stock?: number;
-  categoryId?: string;
-  images?: string[];
-  isActive?: boolean;
-  unitType?: string;
-  unitLabel?: string;
 }
