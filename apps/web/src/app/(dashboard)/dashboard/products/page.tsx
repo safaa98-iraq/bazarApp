@@ -1,16 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff, Sparkles, Search, Loader2, X, Upload, Image as ImageIcon, Lock } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Sparkles, Search, Loader2, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import { ProductPublic, CategoryPublic, AIDescriptionResult, AIPriceResult } from '@storebuilder/types';
+import { ProductPublic, CategoryPublic } from '@storebuilder/types';
 import { formatCurrency } from '@/lib/utils';
-import { AIDescriptionButton } from '@/components/ai/AIDescriptionButton';
-import { AIPriceButton } from '@/components/ai/AIPriceButton';
 import { getStoreType } from '@/lib/store-types';
 import { useAuthStore } from '@/lib/stores/auth.store';
-import { canUseFeature, getFeatureLimit, Plan } from '@/lib/plan-features';
+import { getFeatureLimit, Plan } from '@/lib/plan-features';
 import Image from 'next/image';
 import { trackPage, track } from '@/lib/track';
 
@@ -18,13 +16,13 @@ const BRAND = { primary: '#432E54', secondary: '#4B4376', accent: '#AE445A', lig
 
 interface ProductForm {
   name: string; description: string; price: string; comparePrice: string;
-  stock: string; unit: string; categoryId: string; keyFeatures: string;
+  stock: string; unit: string; categoryId: string;
   seoTitle: string; seoDescription: string; seoSlug: string;
   images: string[];
 }
 const emptyForm: ProductForm = {
   name: '', description: '', price: '', comparePrice: '',
-  stock: '0', unit: 'piece', categoryId: '', keyFeatures: '',
+  stock: '0', unit: 'piece', categoryId: '',
   seoTitle: '', seoDescription: '', seoSlug: '', images: [],
 };
 
@@ -98,7 +96,6 @@ export default function ProductsPage() {
   const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
   const productLimit = getFeatureLimit(plan, 'products');
   const canAddMore = productLimit === null || productLimit === undefined;
-  const canUseAI = canUseFeature(plan, 'ai');
   const [products, setProducts] = useState<ProductPublic[]>([]);
   const [categories, setCategories] = useState<CategoryPublic[]>([]);
   const [storeType, setStoreType] = useState<string>('fashion');
@@ -108,7 +105,6 @@ export default function ProductsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
-  const [generatingSEO, setGeneratingSEO] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'seo'>('basic');
 
   useEffect(() => { trackPage('products'); }, []);
@@ -138,7 +134,7 @@ export default function ProductsPage() {
       name: p.name, description: p.description ?? '', price: String(p.price),
       comparePrice: p.comparePrice ? String(p.comparePrice) : '',
       stock: String(p.stock), unit: p.unit ?? getStoreType(storeType).defaultUnit,
-      categoryId: p.categoryId ?? '', keyFeatures: '',
+      categoryId: p.categoryId ?? '',
       seoTitle: p.seoTitle ?? '', seoDescription: p.seoDescription ?? '',
       seoSlug: p.seoSlug ?? '', images: p.images ?? [],
     });
@@ -183,35 +179,11 @@ export default function ProductsPage() {
     catch { toast.error('فشل التحديث'); }
   };
 
-  const handleAIDesc = (r: AIDescriptionResult) => {
-    setForm(f => ({ ...f, description: r.description, seoTitle: r.seoTitle, seoDescription: r.seoDescription }));
-  };
-  const handleAIPrice = (r: AIPriceResult) => {
-    setForm(f => ({ ...f, price: String(r.suggestedPrice) }));
-    toast.info(`💡 ${r.reasoning}`, { duration: 6000 });
-  };
-
-  const generateSEO = async () => {
-    if (!form.name) { toast.error('أدخل اسم المنتج أولاً'); return; }
-    setGeneratingSEO(true);
-    try {
-      const res = await api.post<{ success: boolean; data: { seoTitle: string; seoDescription: string; seoSlug: string } }>(
-        '/api/ai/generate-seo',
-        { name: form.name, description: form.description, category: categories.find(c => c.id === form.categoryId)?.name }
-      );
-      setForm(f => ({ ...f, seoTitle: res.data.seoTitle, seoDescription: res.data.seoDescription, seoSlug: res.data.seoSlug }));
-      toast.success('تم توليد SEO ✨');
-    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'فشل'); }
-    finally { setGeneratingSEO(false); }
-  };
-
   const catName = (id: string) => categories.find(c => c.id === id)?.name ?? '';
-
   const atProductLimit = !canAddMore && products.length >= (productLimit ?? 0);
 
   return (
     <div className="p-6 max-w-6xl" dir="rtl">
-      {/* Plan limit bar */}
       {!canAddMore && (
         <div className="mb-4 px-4 py-3 rounded-2xl border flex items-center gap-3"
           style={{ background: atProductLimit ? '#FEF2F2' : '#FEF3C7', borderColor: atProductLimit ? '#FECACA' : '#FCD34D' }}>
@@ -233,7 +205,7 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
-      {/* Header */}
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>المنتجات</h1>
@@ -246,7 +218,6 @@ export default function ProductsPage() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="relative mb-4">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ابحث عن منتج…"
@@ -254,7 +225,6 @@ export default function ProductsPage() {
           style={{ borderColor: '#E8E0F0' }} />
       </div>
 
-      {/* Table */}
       {loading ? (
         <div className="flex items-center justify-center h-40">
           <Loader2 className="h-6 w-6 animate-spin" style={{ color: BRAND.accent }} />
@@ -336,7 +306,6 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Product Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" dir="rtl">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
@@ -349,7 +318,6 @@ export default function ProductsPage() {
               </button>
             </div>
 
-            {/* Tabs */}
             <div className="flex border-b border-[#E8E0F0] px-6">
               {[['basic', 'المعلومات الأساسية'], ['seo', 'SEO والبحث']].map(([tab, label]) => (
                 <button key={tab} onClick={() => setActiveTab(tab as 'basic' | 'seo')}
@@ -363,10 +331,8 @@ export default function ProductsPage() {
 
             <form onSubmit={handleSave} className="p-6 space-y-5">
               {activeTab === 'basic' && <>
-                {/* Images */}
                 <ImageUploader images={form.images} onChange={imgs => setForm(f => ({ ...f, images: imgs }))} />
 
-                {/* Name */}
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>اسم المنتج *</label>
                   <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required
@@ -374,42 +340,17 @@ export default function ProductsPage() {
                     style={{ borderColor: '#E8E0F0' }} placeholder="مثال: حذاء رياضي مريح" />
                 </div>
 
-                {/* Description + AI */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold" style={{ color: BRAND.primary }}>الوصف</label>
-                    {canUseAI
-                      ? <AIDescriptionButton productName={form.name} category={catName(form.categoryId)}
-                          keyFeatures={form.keyFeatures.split(',').map(s => s.trim()).filter(Boolean)} onResult={handleAIDesc} />
-                      : <a href="/dashboard/settings?tab=billing" className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border"
-                          style={{ borderColor: '#C4B5FD', color: '#7C3AED', background: '#EDE9FE' }}>
-                          <Lock className="h-3 w-3" /> AI — PRO
-                        </a>
-                    }
-                  </div>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>الوصف</label>
                   <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                     rows={4} placeholder="وصف تفصيلي للمنتج…"
                     className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 resize-none transition"
                     style={{ borderColor: '#E8E0F0' }} />
-                  <input value={form.keyFeatures} onChange={e => setForm({ ...form, keyFeatures: e.target.value })}
-                    placeholder="مميزات للذكاء الاصطناعي (مفصولة بفاصلة): خفيف، متين، مريح"
-                    className="mt-2 w-full px-3 py-2 rounded-xl border text-xs text-gray-500 focus:outline-none transition"
-                    style={{ borderColor: '#E8E0F0' }} />
                 </div>
 
-                {/* Price */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-semibold" style={{ color: BRAND.primary }}>السعر *</label>
-                      {canUseAI
-                        ? <AIPriceButton productName={form.name} category={catName(form.categoryId)} onResult={handleAIPrice} />
-                        : <a href="/dashboard/settings?tab=billing" className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg border"
-                            style={{ borderColor: '#C4B5FD', color: '#7C3AED', background: '#EDE9FE' }}>
-                            <Lock className="h-3 w-3" /> AI
-                          </a>
-                      }
-                    </div>
+                    <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>السعر *</label>
                     <input type="number" min="0" step="0.01" value={form.price} required
                       onChange={e => setForm({ ...form, price: e.target.value })}
                       className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition"
@@ -424,7 +365,6 @@ export default function ProductsPage() {
                   </div>
                 </div>
 
-                {/* Stock + Unit + Category */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>الكمية والوحدة</label>
@@ -456,22 +396,7 @@ export default function ProductsPage() {
 
               {activeTab === 'seo' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold" style={{ color: BRAND.primary }}>إعدادات SEO</h3>
-                    {canUseAI
-                      ? <button type="button" onClick={generateSEO} disabled={generatingSEO}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition disabled:opacity-60"
-                          style={{ background: `${BRAND.secondary}15`, color: BRAND.secondary }}>
-                          {generatingSEO ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                          {generatingSEO ? 'جارٍ التوليد…' : 'توليد تلقائي بالذكاء الاصطناعي ✨'}
-                        </button>
-                      : <a href="/dashboard/settings?tab=billing"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border"
-                          style={{ borderColor: '#C4B5FD', color: '#7C3AED', background: '#EDE9FE' }}>
-                          <Lock className="h-3 w-3" /> AI SEO — خطة PRO
-                        </a>
-                    }
-                  </div>
+                  <h3 className="text-sm font-bold" style={{ color: BRAND.primary }}>إعدادات SEO</h3>
                   <div>
                     <div className="flex justify-between mb-1"><label className="text-xs text-gray-500">عنوان SEO</label><span className="text-xs text-gray-400">{form.seoTitle.length}/60</span></div>
                     <input value={form.seoTitle} onChange={e => setForm({ ...form, seoTitle: e.target.value })} maxLength={60}
