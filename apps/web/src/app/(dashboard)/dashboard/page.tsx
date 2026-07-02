@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, ShoppingCart, Package, DollarSign, Plus, ArrowLeft, Zap, Lock } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/auth.store';
-import { Plan, PLAN_COLORS } from '@/lib/plan-features';
+import { Plan } from '@/lib/plan-features';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { trackPage } from '@/lib/track';
 
