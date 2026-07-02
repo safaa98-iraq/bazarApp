@@ -5,10 +5,9 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, ShoppingCart, Package, DollarSign, Plus, ArrowLeft, Sparkles, Zap, Lock } from 'lucide-react';
-import { AICredits } from '@storebuilder/types';
+import { TrendingUp, ShoppingCart, Package, DollarSign, Plus, ArrowLeft, Zap, Lock } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/auth.store';
-import { canUseFeature, Plan, PLAN_LABELS, PLAN_COLORS, planAtLeast } from '@/lib/plan-features';
+import { Plan, PLAN_COLORS } from '@/lib/plan-features';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { trackPage } from '@/lib/track';
 
@@ -31,10 +30,8 @@ const statusAr: Record<string, string> = {
 export default function DashboardOverview() {
   const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
   const isFree = plan === 'FREE';
-  const planColors = PLAN_COLORS[plan];
   const [store, setStore] = useState<StoreData | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
-  const [credits, setCredits] = useState<AICredits | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,12 +41,8 @@ export default function DashboardOverview() {
         const storeRes = await api.get<{ success: boolean; data: StoreData }>('/api/stores/my');
         if (storeRes.data) {
           setStore(storeRes.data);
-          await Promise.all([
-            api.get<{ success: boolean; data: DashboardData }>(`/api/storefront/${storeRes.data.slug}/analytics`)
-              .then(r => setData(r.data)).catch(() => null),
-            api.get<{ success: boolean; data: AICredits }>('/api/ai/credits')
-              .then(r => setCredits(r.data)).catch(() => null),
-          ]);
+          await api.get<{ success: boolean; data: DashboardData }>(`/api/storefront/${storeRes.data.slug}/analytics`)
+            .then(r => setData(r.data)).catch(() => null);
         }
       } catch { /* store not yet created */ }
       finally { setLoading(false); }
@@ -82,7 +75,6 @@ export default function DashboardOverview() {
 
   return (
     <div className="p-6 max-w-5xl">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>{store.name}</h1>
@@ -106,10 +98,8 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Onboarding checklist — shown until all steps done */}
       <OnboardingChecklist />
 
-      {/* FREE plan upgrade banner */}
       {isFree && (
         <div className="mb-6 rounded-2xl overflow-hidden border" style={{ borderColor: '#C4B5FD' }}>
           <div className="px-5 py-4 flex items-center justify-between gap-4"
@@ -121,7 +111,7 @@ export default function DashboardOverview() {
               <div>
                 <p className="font-bold text-sm" style={{ color: '#432E54' }}>أنت على الخطة المجانية</p>
                 <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
-                  10 منتجات • 3 تصنيفات • بدون ذكاء اصطناعي أو تحليلات أو محادثات
+                  75 منتج • 3 تصنيفات • بدون تحليلات أو محادثات
                 </p>
               </div>
             </div>
@@ -133,10 +123,10 @@ export default function DashboardOverview() {
           </div>
           <div className="grid grid-cols-3 divide-x divide-x-reverse" style={{ background: '#FAF5FF', borderTop: '1px solid #E9D5FF' }}>
             {[
-              { label: 'منتجات غير محدودة', locked: false },
-              { label: 'ذكاء اصطناعي + تحليلات', locked: false },
-              { label: 'مسوقون بالعمولة', locked: false },
-            ].map(({ label }) => (
+              'منتجات غير محدودة',
+              'تحليلات متقدمة',
+              'مسوقون بالعمولة',
+            ].map(label => (
               <div key={label} className="flex items-center justify-center gap-1.5 py-2">
                 <Lock className="h-3 w-3" style={{ color: '#9CA3AF' }} />
                 <span className="text-xs text-gray-500">{label}</span>
@@ -146,7 +136,6 @@ export default function DashboardOverview() {
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'إجمالي الإيرادات', value: formatCurrency(data?.totalRevenue ?? 0), icon: DollarSign, color: '#10b981', bg: '#ecfdf5' },
@@ -168,34 +157,6 @@ export default function DashboardOverview() {
         ))}
       </div>
 
-      {/* AI Credits */}
-      {credits && (
-        <div className="mb-6 rounded-2xl p-4 border"
-          style={{ background: `linear-gradient(135deg, ${BRAND.primary}08, ${BRAND.accent}08)`, borderColor: `${BRAND.primary}20` }}>
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${BRAND.primary}15` }}>
-              <Sparkles className="h-4 w-4" style={{ color: BRAND.primary }} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-semibold" style={{ color: BRAND.primary }}>رصيد الذكاء الاصطناعي اليومي</span>
-                <span className="text-sm font-bold" style={{ color: BRAND.accent }}>{credits.remaining} / {credits.limit}</span>
-              </div>
-              <div className="h-1.5 w-full rounded-full" style={{ background: '#E8E0F0' }}>
-                <div className="h-full rounded-full transition-all"
-                  style={{ width: `${Math.round((credits.remaining / credits.limit) * 100)}%`, background: credits.remaining > credits.limit * 0.5 ? '#10b981' : credits.remaining > credits.limit * 0.2 ? '#f59e0b' : '#ef4444' }} />
-              </div>
-            </div>
-            {credits.remaining === 0 && (
-              <div className="flex items-center gap-1 text-xs font-medium flex-shrink-0" style={{ color: '#ef4444' }}>
-                <Zap className="h-3.5 w-3.5" /> نفد الرصيد
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Analytics gated for FREE */}
       {isFree && (
         <div className="relative mb-6 rounded-2xl overflow-hidden border" style={{ borderColor: '#E8E0F0' }}>
           <div className="p-5 opacity-30 pointer-events-none select-none blur-[2px]">
@@ -223,7 +184,6 @@ export default function DashboardOverview() {
       )}
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
         <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#E8E0F0' }}>
           <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#E8E0F0' }}>
             <h2 className="font-bold" style={{ color: BRAND.primary }}>آخر الطلبات</h2>
@@ -247,7 +207,6 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        {/* Top Products */}
         <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#E8E0F0' }}>
           <div className="px-5 py-4 border-b" style={{ borderColor: '#E8E0F0' }}>
             <h2 className="font-bold" style={{ color: BRAND.primary }}>أفضل المنتجات</h2>
