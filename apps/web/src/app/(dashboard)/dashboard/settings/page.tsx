@@ -94,11 +94,10 @@ const PLAN_DEFS = [
     color: '#6B7280',
     planKey: 'FREE' as const,
     features: [
-      { label: '10 منتجات', ok: true },
+      { label: '75 منتج', ok: true },
       { label: '3 تصنيفات', ok: true },
       { label: '2 كوبون خصم', ok: true },
       { label: 'متجر عام', ok: true },
-      { label: 'ذكاء اصطناعي', ok: false },
       { label: 'تحليلات متقدمة', ok: false },
       { label: 'مؤثرون', ok: false },
       { label: 'محادثات', ok: false },
@@ -112,11 +111,10 @@ const PLAN_DEFS = [
     planKey: 'PRO' as const,
     badge: 'الأكثر شعبية',
     features: [
-      { label: '200 منتج', ok: true },
+      { label: 'منتجات غير محدودة', ok: true },
       { label: 'تصنيفات غير محدودة', ok: true },
       { label: 'كوبونات غير محدودة', ok: true },
       { label: 'نوع متجر متخصص', ok: true },
-      { label: 'ذكاء اصطناعي (30/يوم)', ok: true },
       { label: 'تحليلات متقدمة', ok: true },
       { label: '10 مؤثرين', ok: true },
       { label: 'نظام محادثات', ok: true },
@@ -133,7 +131,6 @@ const PLAN_DEFS = [
       { label: 'تصنيفات غير محدودة', ok: true },
       { label: 'كوبونات غير محدودة', ok: true },
       { label: 'نوع متجر متخصص', ok: true },
-      { label: 'ذكاء اصطناعي (500/يوم)', ok: true },
       { label: 'تحليلات متقدمة', ok: true },
       { label: 'مؤثرون غير محدودون', ok: true },
       { label: 'نظام محادثات', ok: true },
@@ -222,7 +219,6 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 max-w-3xl" dir="rtl">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>إعدادات المتجر</h1>
@@ -237,7 +233,6 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 mb-5 p-1 rounded-2xl" style={{ background: '#F5F0FA' }}>
         {[['basic', 'الأساسية'], ['type', 'النوع'], ['design', 'التصميم'], ['billing', 'الخطة']].map(([tab, label]) => (
           <button key={tab} onClick={() => setActiveTab(tab as 'basic' | 'type' | 'design' | 'billing')}
@@ -249,7 +244,6 @@ export default function SettingsPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-
         {activeTab === 'basic' && (
           <div className="bg-white rounded-2xl border p-6 space-y-5" style={{ borderColor: '#E8E0F0' }}>
             <LogoUploader logo={form.logo} onChange={url => setForm(f => ({ ...f, logo: url }))} />
@@ -364,7 +358,6 @@ export default function SettingsPage() {
 
         {activeTab === 'billing' && (
           <div className="space-y-5">
-            {/* Current plan indicator */}
             <div className="rounded-2xl border p-4 flex items-center gap-3"
               style={{ background: `${planColors.bg}`, borderColor: planColors.border }}>
               <Crown className="h-5 w-5 flex-shrink-0" style={{ color: planColors.text }} />
@@ -378,7 +371,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Plan cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PLAN_DEFS.map(p => {
                 const isCurrent = plan === p.id;
@@ -435,7 +427,6 @@ export default function SettingsPage() {
               })}
             </div>
 
-            {/* Feature comparison note */}
             <div className="rounded-2xl p-4 text-center" style={{ background: '#F5F0FA' }}>
               <p className="text-xs text-gray-500">جميع الخطط تشمل متجراً إلكترونياً كاملاً مع بوابة دفع آمنة وشهادة SSL</p>
             </div>
