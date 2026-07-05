@@ -3,7 +3,11 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 
-const uploadsDir = path.join(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads');
+const uploadRoot = process.env.UPLOAD_DIR ?? 'uploads';
+const uploadsDir = path.isAbsolute(uploadRoot)
+  ? uploadRoot
+  : path.join(process.cwd(), uploadRoot);
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
