@@ -7,19 +7,39 @@ const REPLACEMENTS: Record<string, string> = {
   '10 منتج': '75 منتج',
 };
 
-const t = (...codes: number[]) => String.fromCharCode(...codes);
-const HIDE_PATTERNS = [
-  t(1584,1603,1575,1569,32,1575,1589,1591,1606,1575,1593,1610),
-  t(1575,1604,1584,1603,1575,1569,32,1575,1604,1575,1589,1591,1606,1575,1593,1610),
-  t(1578,1608,1604,1610,1583,32,1578,1604,1602,1575,1574,1610,32,1576,1575,1604,1584,1603,1575,1569,32,1575,1604,1575,1589,1591,1606,1575,1593,1610),
-  t(1578,1608,1604,1610,1583,32,1576,1575,1604,1584,1603,1575,1569,32,1575,1604,1575,1589,1591,1606,1575,1593,1610),
-  t(1575,1602,1578,1585,1575,1581,32,1587,1593,1585,32,1576,1575,1604,1584,1603,1575,1569,32,1575,1604,1575,1589,1591,1606,1575,1593,1610),
-  t(1603,1578,1575,1576,1577,32,1571,1608,1589,1575,1601,32,1575,1604,1605,1606,1578,1580,1575,1578,32,1576,1575,1604,1584,1603,1575,1569,32,1575,1604,1575,1589,1591,1606,1575,1593,1610),
-  t(1575,1602,1578,1585,1575,1581,1575,1578,32,1575,1604,1605,1606,1578,1580,1575,1578,32,1604,1604,1593,1605,1604,1575,1569),
-  t(1585,1589,1610,1583,32,1575,1604,1584,1603,1575,1569,32,1575,1604,1575,1589,1591,1606,1575,1593,1610),
-  t(65,73),
-  t(71,111,111,103,108,101,32,65,100,83,101,110,115,101),
+const BLOCKED_TEXT_PATTERNS = [
+  /ذكاء/i,
+  /الذكاء/i,
+  /اصطناعي/i,
+  /الاصطناعي/i,
+  /\bAI\b/i,
+  /OpenAI/i,
+  /ChatGPT/i,
+  /توليد/i,
+  /اقتراح\s*سعر/i,
+  /رصيد/i,
+  /أوصاف\s*المنتجات/i,
+  /وصف\s*المنتجات/i,
+  /generate\s*description/i,
+  /suggest\s*price/i,
+  /credits?/i,
 ];
+
+const HIDE_SELECTOR = [
+  'tr',
+  'button',
+  'a',
+  'li',
+  '[role="button"]',
+  '[data-ai-feature]',
+  '.ai-feature',
+  '.feature-row',
+  '.pricing-feature',
+  '.plan-feature',
+  'section',
+  'article',
+  'div',
+].join(',');
 
 function normalizeNodeText(node: Node) {
   if (!node.nodeValue) return;
@@ -30,23 +50,45 @@ function normalizeNodeText(node: Node) {
   if (nextValue !== node.nodeValue) node.nodeValue = nextValue;
 }
 
-function hideElementForNode(node: Node) {
+function hasBlockedText(text: string) {
+  return BLOCKED_TEXT_PATTERNS.some(pattern => pattern.test(text));
+}
+
+function hideTargetFrom(element: Element | null) {
+  if (!element) return;
+  const target = element.closest(HIDE_SELECTOR) as HTMLElement | null;
+  if (!target || target === document.body || target === document.documentElement) return;
+  target.style.display = 'none';
+  target.setAttribute('aria-hidden', 'true');
+}
+
+function hideElementForTextNode(node: Node) {
   const text = node.nodeValue ?? '';
-  if (!HIDE_PATTERNS.some(pattern => text.includes(pattern))) return;
-  const parent = node.parentElement;
-  if (!parent) return;
-  const target = (parent.closest('tr') ?? parent.closest('button, a, li, div')) as HTMLElement | null;
-  if (target && target !== document.body) {
-    target.style.display = 'none';
-  }
+  if (!hasBlockedText(text)) return;
+  hideTargetFrom(node.parentElement);
+}
+
+function hideElementForAttributes(element: Element) {
+  const text = [
+    element.getAttribute('placeholder') ?? '',
+    element.getAttribute('title') ?? '',
+    element.getAttribute('aria-label') ?? '',
+    element.getAttribute('data-label') ?? '',
+  ].join(' ');
+  if (hasBlockedText(text)) hideTargetFrom(element);
 }
 
 function normalizeVisibleText(root: Node = document.body) {
+  if (root instanceof Element) {
+    hideElementForAttributes(root);
+    root.querySelectorAll('*').forEach(hideElementForAttributes);
+  }
+
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node = walker.nextNode();
   while (node) {
     normalizeNodeText(node);
-    hideElementForNode(node);
+    hideElementForTextNode(node);
     node = walker.nextNode();
   }
 }
@@ -57,10 +99,21 @@ export function FreePlanTextNormalizer() {
 
     const observer = new MutationObserver(mutations => {
       for (const mutation of mutations) {
+        if (mutation.type === 'characterData') {
+          normalizeNodeText(mutation.target);
+          hideElementForTextNode(mutation.target);
+          continue;
+        }
+
+        if (mutation.type === 'attributes' && mutation.target instanceof Element) {
+          hideElementForAttributes(mutation.target);
+          continue;
+        }
+
         mutation.addedNodes.forEach(node => {
           if (node.nodeType === Node.TEXT_NODE) {
             normalizeNodeText(node);
-            hideElementForNode(node);
+            hideElementForTextNode(node);
           } else if (node instanceof HTMLElement) {
             normalizeVisibleText(node);
           }
@@ -68,7 +121,14 @@ export function FreePlanTextNormalizer() {
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['placeholder', 'title', 'aria-label', 'data-label'],
+    });
+
     return () => observer.disconnect();
   }, []);
 
