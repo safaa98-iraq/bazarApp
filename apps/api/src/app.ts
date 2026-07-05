@@ -27,6 +27,10 @@ import notificationRoutes from './routes/notifications';
 import trackRoutes from './routes/track';
 
 const isProd = process.env.NODE_ENV === 'production';
+const uploadRoot = process.env.UPLOAD_DIR ?? 'uploads';
+const uploadsDir = path.isAbsolute(uploadRoot)
+  ? uploadRoot
+  : path.join(process.cwd(), uploadRoot);
 const authRateLimitMax = Number(process.env.AUTH_RATE_LIMIT_MAX ?? (isProd ? 5 : 100));
 const authRateLimitWindowMs = Number(
   process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? (isProd ? 15 * 60 * 1000 : 60 * 1000)
@@ -119,7 +123,7 @@ export function createApp() {
   // ── Static uploads (no directory listing) ────────────────────────────
   app.use(
     '/uploads',
-    express.static(path.join(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads'), {
+    express.static(uploadsDir, {
       index: false,          // disable directory listing
       dotfiles: 'deny',      // block hidden files
       setHeaders: (res) => {
