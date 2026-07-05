@@ -7,12 +7,25 @@ const createId = () => randomBytes(12).toString('hex');
 
 const router = Router();
 
-const hiddenCopy = String.fromCharCode(1584, 1603, 1575, 1569);
-const hiddenCopyFull = String.fromCharCode(1575, 1604, 1584, 1603, 1575, 1569, 32, 1575, 1604, 1575, 1589, 1591, 1606, 1575, 1593, 1610);
-const hiddenAds = String.fromCharCode(71, 111, 111, 103, 108, 101, 32, 65, 100, 83, 101, 110, 115, 101);
+const HIDDEN_PUBLIC_TEXT_PATTERNS = [
+  'ذكاء',
+  'الذكاء',
+  'اصطناعي',
+  'الاصطناعي',
+  'AI',
+  'OpenAI',
+  'ChatGPT',
+  'توليد',
+  'اقتراح سعر',
+  'رصيد',
+  'أوصاف المنتجات',
+  'وصف المنتجات',
+  'Google AdSense',
+];
 
 function isPublicPlanText(value: string): boolean {
-  return !value.includes(hiddenCopy) && !value.includes(hiddenCopyFull) && !value.includes(hiddenAds);
+  const normalized = value.toLowerCase();
+  return !HIDDEN_PUBLIC_TEXT_PATTERNS.some(pattern => normalized.includes(pattern.toLowerCase()));
 }
 
 function publicPlanConfig(plan: PlanConfig): PlanConfig {
