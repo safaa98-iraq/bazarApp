@@ -17,7 +17,7 @@ router.post(
         return;
       }
 
-      const apiUrl = process.env.API_URL ?? 'http://localhost:4000';
+      const apiUrl = (process.env.API_URL ?? 'http://localhost:4000').replace(/\/$/, '');
       const urls = files.map(
         (f) => `${apiUrl}/uploads/${path.basename(f.path)}`
       );
