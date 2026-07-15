@@ -3,18 +3,36 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
-import { AnalyticsData } from '@storebuilder/types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, Users, Store, ShoppingCart, TrendingUp } from 'lucide-react';
 
 const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#E8BCB9' };
 
+interface AdminAnalyticsData {
+  totalRevenue: number;
+  totalOrders: number;
+  totalMerchants: number;
+  activeMerchants: number;
+  inactiveMerchants: number;
+  totalStores: number;
+  activeStores: number;
+  newMerchantsThisMonth: number;
+  revenueByMonth: Array<{ month: string; revenue: number }>;
+  topStores: Array<{
+    storeId: string;
+    storeName: string;
+    slug: string;
+    totalRevenue: number;
+    totalOrders: number;
+  }>;
+}
+
 export default function AdminDashboard() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [data, setData] = useState<AdminAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<{ success: boolean; data: AnalyticsData }>('/api/admin/analytics')
+    api.get<{ success: boolean; data: AdminAnalyticsData }>('/api/admin/analytics')
       .then((res) => setData(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -40,7 +58,6 @@ export default function AdminDashboard() {
     <div style={{ padding: 32 }}>
       <h1 style={{ fontSize: 22, fontWeight: 800, color: B.p, marginBottom: 28 }}>لوحة التحكم</h1>
 
-      {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 28 }}>
         <StatCard title="إجمالي الإيرادات" value={formatCurrency(data?.totalRevenue ?? 0)} icon={<DollarSign size={20} color="#059669" />} bg="#D1FAE5" />
         <StatCard title="إجمالي الطلبات" value={String(data?.totalOrders ?? 0)} icon={<ShoppingCart size={20} color="#2563EB" />} bg="#DBEAFE" />
@@ -49,7 +66,6 @@ export default function AdminDashboard() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
-        {/* Revenue chart */}
         <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #E8E0F0' }}>
           <h2 style={{ fontSize: 15, fontWeight: 700, color: B.p, marginBottom: 16 }}>الإيرادات (آخر 6 أشهر)</h2>
           <ResponsiveContainer width="100%" height={220}>
@@ -62,7 +78,6 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Merchant pie */}
         <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #E8E0F0' }}>
           <h2 style={{ fontSize: 15, fontWeight: 700, color: B.p, marginBottom: 8 }}>حالة التجار</h2>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -74,13 +89,12 @@ export default function AdminDashboard() {
             </PieChart>
           </div>
           <div style={{ display: 'flex', gap: 16, fontSize: 13, marginTop: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: '50%', background: B.a, display: 'inline-block' }} /><span>نشط: {data?.activeMerchants}</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: '50%', background: '#E8E0F0', display: 'inline-block' }} /><span>غير نشط: {data?.inactiveMerchants}</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: '50%', background: B.a, display: 'inline-block' }} /><span>نشط: {data?.activeMerchants ?? 0}</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, borderRadius: '50%', background: '#E8E0F0', display: 'inline-block' }} /><span>غير نشط: {data?.inactiveMerchants ?? 0}</span></div>
           </div>
         </div>
       </div>
 
-      {/* Top stores */}
       <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #E8E0F0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h2 style={{ fontSize: 15, fontWeight: 700, color: B.p }}>أفضل المتاجر أداءً</h2>
