@@ -51,6 +51,8 @@ const HIDE_SELECTOR = [
   'div',
 ].join(',');
 
+const OLD_LIMITS = new Set(['10', '100', '١٠', '١٠٠']);
+
 function normalizeNodeText(node: Node) {
   if (!node.nodeValue) return;
   let nextValue = node.nodeValue;
@@ -88,6 +90,38 @@ function hideElementForAttributes(element: Element) {
   if (hasBlockedText(text)) hideTargetFrom(element);
 }
 
+function enforceFreeProductLimit(root: ParentNode = document) {
+  root.querySelectorAll('tr').forEach(row => {
+    const cells = row.querySelectorAll('td, th');
+    const rowText = row.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+    if (!rowText.includes('عدد المنتجات') || cells.length < 2) return;
+    cells[1].textContent = '75';
+  });
+
+  const walker = document.createTreeWalker(
+    root instanceof Node ? root : document.body,
+    NodeFilter.SHOW_TEXT,
+  );
+
+  let node = walker.nextNode();
+  while (node) {
+    const value = node.nodeValue?.trim() ?? '';
+    if (OLD_LIMITS.has(value)) {
+      let container = node.parentElement;
+      for (let depth = 0; container && depth < 5; depth += 1) {
+        const text = container.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+        const inPricingArea = Boolean(container.closest('#pricing, #plan-comparison, [data-pricing], [data-plan-card]'));
+        if (inPricingArea && /منتج|منتجات|products?/i.test(text) && text.length <= 45) {
+          node.nodeValue = /[١٠]/.test(value) ? '٧٥' : '75';
+          break;
+        }
+        container = container.parentElement;
+      }
+    }
+    node = walker.nextNode();
+  }
+}
+
 function normalizeVisibleText(root: Node = document.body) {
   if (root instanceof Element) {
     hideElementForAttributes(root);
@@ -101,6 +135,8 @@ function normalizeVisibleText(root: Node = document.body) {
     hideElementForTextNode(node);
     node = walker.nextNode();
   }
+
+  enforceFreeProductLimit(root instanceof ParentNode ? root : document);
 }
 
 export function FreePlanTextNormalizer() {
@@ -129,6 +165,8 @@ export function FreePlanTextNormalizer() {
           }
         });
       }
+
+      enforceFreeProductLimit();
     });
 
     observer.observe(document.body, {
