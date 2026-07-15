@@ -3,8 +3,16 @@
 import { useEffect } from 'react';
 
 const REPLACEMENTS: Record<string, string> = {
+  '100 منتجات': '75 منتج',
+  '100 منتج': '75 منتج',
   '10 منتجات': '75 منتج',
   '10 منتج': '75 منتج',
+  '١٠٠ منتجات': '٧٥ منتج',
+  '١٠٠ منتج': '٧٥ منتج',
+  '١٠ منتجات': '٧٥ منتج',
+  '١٠ منتج': '٧٥ منتج',
+  '100 products': '75 products',
+  '10 products': '75 products',
 };
 
 const BLOCKED_TEXT_PATTERNS = [
@@ -12,17 +20,20 @@ const BLOCKED_TEXT_PATTERNS = [
   /الذكاء/i,
   /اصطناعي/i,
   /الاصطناعي/i,
+  /ذكي/i,
   /\bAI\b/i,
   /OpenAI/i,
   /ChatGPT/i,
-  /توليد/i,
-  /اقتراح\s*سعر/i,
-  /رصيد/i,
-  /أوصاف\s*المنتجات/i,
-  /وصف\s*المنتجات/i,
+  /artificial\s+intelligence/i,
+  /machine\s+learning/i,
+  /توليد\s+(?:بال|بواسطة|عبر)?\s*الذكاء/i,
+  /اقتراح\s*سعر\s+(?:بال|بواسطة|عبر)?\s*الذكاء/i,
+  /رصيد\s+(?:ال)?ذكاء/i,
+  /أوصاف\s*المنتجات\s+(?:بال|بواسطة|عبر)?\s*الذكاء/i,
+  /وصف\s*المنتجات\s+(?:بال|بواسطة|عبر)?\s*الذكاء/i,
   /generate\s*description/i,
   /suggest\s*price/i,
-  /credits?/i,
+  /AI\s*credits?/i,
 ];
 
 const HIDE_SELECTOR = [
@@ -36,7 +47,6 @@ const HIDE_SELECTOR = [
   '.feature-row',
   '.pricing-feature',
   '.plan-feature',
-  'section',
   'article',
   'div',
 ].join(',');
