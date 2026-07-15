@@ -52,6 +52,7 @@ const HIDE_SELECTOR = [
 ].join(',');
 
 const OLD_LIMITS = new Set(['10', '100', '١٠', '١٠٠']);
+type SearchRoot = Document | Element | DocumentFragment;
 
 function normalizeNodeText(node: Node) {
   if (!node.nodeValue) return;
@@ -90,7 +91,7 @@ function hideElementForAttributes(element: Element) {
   if (hasBlockedText(text)) hideTargetFrom(element);
 }
 
-function enforceFreeProductLimit(root: ParentNode = document) {
+function enforceFreeProductLimit(root: SearchRoot = document) {
   root.querySelectorAll('tr').forEach(row => {
     const cells = row.querySelectorAll('td, th');
     const rowText = row.textContent?.replace(/\s+/g, ' ').trim() ?? '';
@@ -98,11 +99,7 @@ function enforceFreeProductLimit(root: ParentNode = document) {
     cells[1].textContent = '75';
   });
 
-  const walker = document.createTreeWalker(
-    root instanceof Node ? root : document.body,
-    NodeFilter.SHOW_TEXT,
-  );
-
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node = walker.nextNode();
   while (node) {
     const value = node.nodeValue?.trim() ?? '';
@@ -122,6 +119,11 @@ function enforceFreeProductLimit(root: ParentNode = document) {
   }
 }
 
+function getSearchRoot(root: Node): SearchRoot {
+  if (root instanceof Document || root instanceof Element || root instanceof DocumentFragment) return root;
+  return document;
+}
+
 function normalizeVisibleText(root: Node = document.body) {
   if (root instanceof Element) {
     hideElementForAttributes(root);
@@ -136,7 +138,7 @@ function normalizeVisibleText(root: Node = document.body) {
     node = walker.nextNode();
   }
 
-  enforceFreeProductLimit(root instanceof ParentNode ? root : document);
+  enforceFreeProductLimit(getSearchRoot(root));
 }
 
 export function FreePlanTextNormalizer() {
