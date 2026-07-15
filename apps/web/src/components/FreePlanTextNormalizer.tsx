@@ -69,6 +69,16 @@ function hasBlockedText(text: string) {
 
 function hideTargetFrom(element: Element | null) {
   if (!element) return;
+
+  if (element.closest('#features') && element.parentElement instanceof HTMLElement) {
+    const featureItem = element.parentElement;
+    if (featureItem !== document.body && featureItem.id !== 'features') {
+      featureItem.style.display = 'none';
+      featureItem.setAttribute('aria-hidden', 'true');
+      return;
+    }
+  }
+
   const target = element.closest(HIDE_SELECTOR) as HTMLElement | null;
   if (!target || target === document.body || target === document.documentElement) return;
   target.style.display = 'none';
@@ -96,7 +106,7 @@ function enforceFreeProductLimit(root: SearchRoot = document) {
     const cells = row.querySelectorAll('td, th');
     const rowText = row.textContent?.replace(/\s+/g, ' ').trim() ?? '';
     if (!rowText.includes('عدد المنتجات') || cells.length < 2) return;
-    cells[1].textContent = '75';
+    if ((cells[1].textContent ?? '').trim() !== '75') cells[1].textContent = '75';
   });
 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
