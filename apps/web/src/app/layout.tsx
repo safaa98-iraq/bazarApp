@@ -1,3 +1,4 @@
+// Railway deploy marker: pricing and retired-feature cleanup.
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import { Tajawal, Cairo } from 'next/font/google';
