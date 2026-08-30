@@ -1,5 +1,6 @@
 import { prisma } from '@storebuilder/database';
 import { cacheGet, cacheSet, cacheIncr } from '../lib/redis';
+import { notifyNewOrder } from '../lib/notify';
 
 function hourKey(storeId: string, ip: string): string {
   const h = new Date().toISOString().slice(0, 13);
@@ -145,6 +146,8 @@ export const widgetService = {
       });
       return o;
     });
+
+    notifyNewOrder(store.id, { id: order.id, customerName: order.customerName, total: Number(order.total) }).catch(() => null);
 
     return order;
   },

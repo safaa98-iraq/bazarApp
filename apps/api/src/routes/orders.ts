@@ -31,6 +31,24 @@ router.get('/:id', ...merchant, async (req: Request, res: Response, next: NextFu
   } catch (err) { next(err); }
 });
 
+// Manual/draft order — merchant creates an order for a phone/social-media sale
+router.post('/', ...merchant, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const storeId = await resolveStoreId(req);
+    const order = await orderService.createDraft(storeId, req.body);
+    res.status(201).json({ success: true, data: order });
+  } catch (err) { next(err); }
+});
+
+// Publish a draft order — decrements stock and moves it to PENDING
+router.post('/:id/publish', ...merchant, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const storeId = await resolveStoreId(req);
+    const order = await orderService.publishDraft(req.params.id, storeId);
+    res.json({ success: true, data: order });
+  } catch (err) { next(err); }
+});
+
 router.patch('/:id/status', ...merchant, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const storeId = await resolveStoreId(req);

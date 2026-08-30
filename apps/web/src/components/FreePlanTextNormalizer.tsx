@@ -3,16 +3,21 @@
 import { useEffect } from 'react';
 
 const REPLACEMENTS: Record<string, string> = {
-  '100 منتجات': '75 منتج',
-  '100 منتج': '75 منتج',
-  '10 منتجات': '75 منتج',
-  '10 منتج': '75 منتج',
-  '١٠٠ منتجات': '٧٥ منتج',
-  '١٠٠ منتج': '٧٥ منتج',
-  '١٠ منتجات': '٧٥ منتج',
-  '١٠ منتج': '٧٥ منتج',
-  '100 products': '75 products',
-  '10 products': '75 products',
+  '100 منتجات': '55 منتج',
+  '100 منتج': '55 منتج',
+  '10 منتجات': '55 منتج',
+  '10 منتج': '55 منتج',
+  '75 منتجات': '55 منتج',
+  '75 منتج': '55 منتج',
+  '١٠٠ منتجات': '٥٥ منتج',
+  '١٠٠ منتج': '٥٥ منتج',
+  '١٠ منتجات': '٥٥ منتج',
+  '١٠ منتج': '٥٥ منتج',
+  '٧٥ منتجات': '٥٥ منتج',
+  '٧٥ منتج': '٥٥ منتج',
+  '100 products': '55 products',
+  '10 products': '55 products',
+  '75 products': '55 products',
 };
 
 const BLOCKED_TEXT_PATTERNS = [
@@ -51,7 +56,7 @@ const HIDE_SELECTOR = [
   'div',
 ].join(',');
 
-const OLD_LIMITS = new Set(['10', '100', '١٠', '١٠٠']);
+const OLD_LIMITS = new Set(['10', '100', '75', '١٠', '١٠٠', '٧٥']);
 type SearchRoot = Document | Element | DocumentFragment;
 
 function normalizeNodeText(node: Node) {
@@ -106,7 +111,7 @@ function enforceFreeProductLimit(root: SearchRoot = document) {
     const cells = row.querySelectorAll('td, th');
     const rowText = row.textContent?.replace(/\s+/g, ' ').trim() ?? '';
     if (!rowText.includes('عدد المنتجات') || cells.length < 2) return;
-    if ((cells[1].textContent ?? '').trim() !== '75') cells[1].textContent = '75';
+    if ((cells[1].textContent ?? '').trim() !== '55') cells[1].textContent = '55';
   });
 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -119,7 +124,7 @@ function enforceFreeProductLimit(root: SearchRoot = document) {
         const text = container.textContent?.replace(/\s+/g, ' ').trim() ?? '';
         const inPricingArea = Boolean(container.closest('#pricing, #plan-comparison, [data-pricing], [data-plan-card]'));
         if (inPricingArea && /منتج|منتجات|products?/i.test(text) && text.length <= 45) {
-          node.nodeValue = /[١٠]/.test(value) ? '٧٥' : '75';
+          node.nodeValue = /[١٠]/.test(value) ? '٥٥' : '55';
           break;
         }
         container = container.parentElement;

@@ -38,6 +38,22 @@ router.post(
 );
 
 router.post(
+  '/customer-register',
+  [
+    body('email').isEmail().normalizeEmail().withMessage('بريد إلكتروني غير صالح'),
+    passwordRules,
+    body('name').trim().isLength({ min: 2, max: 100 }).withMessage('الاسم يجب أن يكون بين 2 و100 حرف'),
+  ],
+  validate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.registerCustomer(req.body);
+      res.status(201).json({ success: true, data: result });
+    } catch (err) { next(err); }
+  }
+);
+
+router.post(
   '/login',
   [
     body('email').isEmail().normalizeEmail().withMessage('بريد إلكتروني غير صالح'),
@@ -56,6 +72,13 @@ router.get('/me', verifyToken, async (req: Request, res: Response, next: NextFun
   try {
     const user = await authService.getMe(req.user!.userId);
     res.json({ success: true, data: user });
+  } catch (err) { next(err); }
+});
+
+router.get('/referrals', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const stats = await authService.getReferralStats(req.user!.userId);
+    res.json({ success: true, data: stats });
   } catch (err) { next(err); }
 });
 

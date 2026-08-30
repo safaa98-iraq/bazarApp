@@ -27,7 +27,10 @@ const STATUS_COLORS: Record<string, string> = {
   pending: '#f59e0b', processing: '#3b82f6', shipped: '#8b5cf6', delivered: '#22c55e', cancelled: '#ef4444',
 };
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function OrderTrackingPage() {
+  useDocumentTitle('تتبع الطلب');
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<MarketplaceOrder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +55,7 @@ export default function OrderTrackingPage() {
     <div className="max-w-2xl mx-auto px-4 py-20 text-center text-gray-400">
       <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
       <p>الطلب غير موجود</p>
-      <Link href="/marketplace" className="mt-4 inline-block text-sm underline" style={{ color: '#AE445A' }}>
+      <Link href="/marketplace" className="mt-4 inline-block text-sm underline" style={{ color: '#DB6E93' }}>
         العودة للسوق
       </Link>
     </div>
@@ -96,7 +99,7 @@ export default function OrderTrackingPage() {
 
         <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between text-sm">
           <span className="text-gray-500">المبلغ الإجمالي</span>
-          <span className="font-bold" style={{ color: '#AE445A' }}>{formatCurrency(order.totalAmount)}</span>
+          <span className="font-bold" style={{ color: '#DB6E93' }}>{formatCurrency(order.totalAmount)}</span>
         </div>
         {order.discountAmount > 0 && (
           <div className="flex justify-between text-sm text-green-600">
@@ -119,9 +122,9 @@ export default function OrderTrackingPage() {
               <div className="flex items-center gap-2">
                 {sub.storeLogo
                   ? <img src={sub.storeLogo} className="h-6 w-6 rounded object-cover" alt="" />
-                  : <Store className="h-4 w-4" style={{ color: '#432E54' }} />
+                  : <Store className="h-4 w-4" style={{ color: '#2F2E4B' }} />
                 }
-                <span className="text-sm font-semibold" style={{ color: '#432E54' }}>{sub.storeName}</span>
+                <span className="text-sm font-semibold" style={{ color: '#2F2E4B' }}>{sub.storeName}</span>
               </div>
               <span className={`text-xs px-2 py-0.5 rounded-full font-medium`}
                 style={{ color: STATUS_COLORS[sub.status] ?? '#9ca3af', background: (STATUS_COLORS[sub.status] ?? '#9ca3af') + '15' }}>

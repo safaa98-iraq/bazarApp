@@ -3,7 +3,6 @@ import { body, validationResult } from 'express-validator';
 import { verifyToken, requireRole } from '../middleware/auth';
 import { aiService } from '../services/ai.service';
 import { recommendationsService } from '../services/recommendations.service';
-import { adminService } from '../services/admin.service';
 import prisma from '@storebuilder/database';
 
 const router = Router();

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Smartphone } from 'lucide-react';
 
 interface StoreInfo { name: string; theme: string; }
 
@@ -19,10 +19,14 @@ export default function OrderConfirmationPage() {
       .then(r => setStore(r.data)).catch(() => null);
   }, [slug]);
 
-  const theme = store?.theme ?? '#432E54';
+  useEffect(() => {
+    if (store?.name) document.title = `تم تأكيد الطلب — ${store.name}`;
+  }, [store?.name]);
+
+  const theme = store?.theme ?? '#2F2E4B';
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" dir="rtl" style={{ background: '#F5F0FA' }}>
+    <div className="min-h-screen flex items-center justify-center px-4" dir="rtl" style={{ background: '#F5EFFA' }}>
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10 text-center">
         {/* Check icon */}
         <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
@@ -30,14 +34,14 @@ export default function OrderConfirmationPage() {
           <CheckCircle2 className="h-10 w-10 text-white" />
         </div>
 
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-2">تم تأكيد طلبك! 🎉</h1>
+        <h1 className="text-2xl font-extrabold text-gray-900 mb-2">تم تأكيد طلبك!</h1>
         <p className="text-gray-500 mb-6 leading-relaxed">
           شكراً لطلبك من <strong className="text-gray-800">{store?.name}</strong>.<br />
           سيتواصل معك فريق المتجر قريباً لتأكيد التوصيل.
         </p>
 
         {/* Order info */}
-        <div className="rounded-2xl p-5 mb-6 text-right" style={{ background: '#F5F0FA', border: '1px solid #E8BCB9' }}>
+        <div className="rounded-2xl p-5 mb-6 text-right" style={{ background: '#F5EFFA', border: '1px solid #FBE1EA' }}>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-sm font-bold" style={{ color: theme }}>تفاصيل الطلب</span>
           </div>
@@ -59,7 +63,7 @@ export default function OrderConfirmationPage() {
 
         {/* Steps */}
         <div className="rounded-2xl p-4 mb-6 text-right" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-          <p className="text-sm font-bold text-emerald-800 mb-3">📲 الخطوات التالية</p>
+          <p className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-1.5"><Smartphone size={14} /> الخطوات التالية</p>
           {[
             'سيتصل بك المتجر لتأكيد طلبك',
             'سيتم ترتيب موعد التوصيل معك',
@@ -74,7 +78,7 @@ export default function OrderConfirmationPage() {
 
         <Link href={`/store/${slug}`}
           className="block w-full py-3.5 font-bold text-white rounded-2xl transition hover:opacity-90"
-          style={{ background: `linear-gradient(135deg, ${theme}, #AE445A)` }}>
+          style={{ background: `linear-gradient(135deg, ${theme}, #DB6E93)` }}>
           مواصلة التسوق
         </Link>
       </div>

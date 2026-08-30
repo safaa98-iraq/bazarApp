@@ -16,7 +16,10 @@ type TrackEvent =
   | 'order_status_updated'
   | 'coupon_created'
   | 'banner_added'
-  | 'chat_sent';
+  | 'chat_sent'
+  | 'brand_added'
+  | 'review_submitted'
+  | 'wishlist_toggled';
 
 interface TrackPayload {
   event: TrackEvent;

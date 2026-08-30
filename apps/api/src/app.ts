@@ -25,6 +25,14 @@ import bannerRoutes from './routes/banners';
 import billingRoutes from './routes/billing';
 import notificationRoutes from './routes/notifications';
 import trackRoutes from './routes/track';
+import widgetRoutes from './routes/widget';
+import attributeRoutes from './routes/attributes';
+import brandRoutes from './routes/brands';
+import reviewRoutes from './routes/reviews';
+import articleRoutes from './routes/articles';
+import customerRoutes from './routes/customer';
+import giftCardRoutes from './routes/giftcards';
+import promotionRoutes from './routes/promotions';
 
 const isProd = process.env.NODE_ENV === 'production';
 const uploadRoot = process.env.UPLOAD_DIR ?? 'uploads';
@@ -39,7 +47,8 @@ const authRateLimitWindowMs = Number(
 // Allowed origins — from env or defaults for local dev
 const allowedOrigins: string[] = isProd
   ? (process.env.ALLOWED_ORIGINS ?? '').split(',').map(o => o.trim()).filter(Boolean)
-  : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
+  : [];
+const isAllowedDevOrigin = (origin: string) => /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
 
 export function createApp() {
   const app = express();
@@ -58,17 +67,32 @@ export function createApp() {
 
   // ── CORS ─────────────────────────────────────────────────────────────
   app.use(
-    cors({
-      origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, Postman, server-to-server)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        callback(new Error(`CORS: origin ${origin} not allowed`));
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'x-session-id'],
-      maxAge: 86400, // preflight cache 24h
+    cors((req, callback) => {
+      // /api/widget/* is a public, embeddable API meant to be called from
+      // arbitrary third-party merchant sites — never restrict its origin.
+      if (req.path.startsWith('/api/widget')) {
+        callback(null, {
+          origin: true,
+          methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+          allowedHeaders: ['Content-Type', 'Authorization'],
+          maxAge: 86400,
+        });
+        return;
+      }
+
+      callback(null, {
+        origin: (origin, cb) => {
+          // Allow requests with no origin (mobile apps, Postman, server-to-server)
+          if (!origin) return cb(null, true);
+          if (allowedOrigins.includes(origin)) return cb(null, true);
+          if (!isProd && isAllowedDevOrigin(origin)) return cb(null, true);
+          cb(new Error(`CORS: origin ${origin} not allowed`));
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-session-id'],
+        maxAge: 86400, // preflight cache 24h
+      });
     })
   );
 
@@ -157,6 +181,14 @@ export function createApp() {
   app.use('/api/billing', billingRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/track', trackRoutes);
+  app.use('/api/widget', widgetRoutes);
+  app.use('/api/attributes', attributeRoutes);
+  app.use('/api/brands', brandRoutes);
+  app.use('/api/reviews', reviewRoutes);
+  app.use('/api/articles', articleRoutes);
+  app.use('/api/customer', customerRoutes);
+  app.use('/api/gift-cards', giftCardRoutes);
+  app.use('/api/promotions', promotionRoutes);
 
   // ── 404 ──────────────────────────────────────────────────────────────
   app.use((_req, res) => {

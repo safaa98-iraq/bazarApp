@@ -2,14 +2,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { PLAN_CONFIGS, type PlanKey } from '@storebuilder/types';
-import { Clock, CheckCircle2, XCircle, Eye, Check, X, RefreshCw, Loader2 } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, Eye, Check, X, RefreshCw, Loader2, MessageCircle, AlertTriangle, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { PlanPrice } from '@/components/pricing/PlanPrice';
 
 const C = {
-  bg: '#F5F0FA', bgAlt: '#FFFFFF', p: '#432E54', s: '#4B4376',
-  a: '#AE445A', text: '#1C0E2E', muted: '#7B6B8D', border: '#E8BCB9',
+  bg: '#F5EFFA', bgAlt: '#FFFFFF', p: '#2F2E4B', s: '#4A4767',
+  a: '#DB6E93', text: '#2F2E4B', muted: '#6B6A83', border: '#FBE1EA',
 };
 
 const STATUS_META: Record<string, { label: string; bg: string; color: string; Icon: typeof Clock }> = {
@@ -54,7 +54,7 @@ function ActionModal({ req, onClose, onDone }: { req: PayRequest; onClose: () =>
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(10,5,20,.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: C.bgAlt, borderRadius: 20, width: '100%', maxWidth: 520, boxShadow: '0 40px 100px rgba(0,0,0,.3)', overflow: 'hidden' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.bgAlt, borderRadius: 10, width: '100%', maxWidth: 520, boxShadow: '0 40px 100px rgba(0,0,0,.3)', overflow: 'hidden' }}>
         <div style={{ background: `linear-gradient(135deg,${C.p},${C.s})`, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ color: '#fff', fontFamily: 'var(--font-cairo)', fontWeight: 800, fontSize: 16 }}>مراجعة طلب الدفع</div>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,.15)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
@@ -64,7 +64,7 @@ function ActionModal({ req, onClose, onDone }: { req: PayRequest; onClose: () =>
 
         <div style={{ padding: '24px' }}>
           {/* User info */}
-          <div style={{ background: C.bg, borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
+          <div style={{ background: C.bg, borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: C.text }}>{req.user.name}</div>
@@ -75,7 +75,7 @@ function ActionModal({ req, onClose, onDone }: { req: PayRequest; onClose: () =>
                     target="_blank" rel="noreferrer"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, color: '#25D366', fontSize: 12, fontWeight: 700, textDecoration: 'none', background: '#F0FDF4', padding: '3px 10px', borderRadius: 99, border: '1px solid #BBF7D0' }}
                   >
-                    <span style={{ fontSize: 14 }}>💬</span>
+                    <MessageCircle size={14} />
                     تواصل واتساب: {req.user.whatsapp}
                   </a>
                 )}
@@ -102,7 +102,7 @@ function ActionModal({ req, onClose, onDone }: { req: PayRequest; onClose: () =>
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.muted, marginBottom: 6 }}>صورة الإيصال</label>
               {showProof ? (
-                <div style={{ position: 'relative', width: '100%', height: 200, borderRadius: 12, overflow: 'hidden', cursor: 'pointer' }} onClick={() => window.open(proofSrc, '_blank')}>
+                <div style={{ position: 'relative', width: '100%', height: 200, borderRadius: 10, overflow: 'hidden', cursor: 'pointer' }} onClick={() => window.open(proofSrc, '_blank')}>
                   <Image src={proofSrc} alt="proof" fill style={{ objectFit: 'cover' }} unoptimized />
                 </div>
               ) : (
@@ -114,8 +114,9 @@ function ActionModal({ req, onClose, onDone }: { req: PayRequest; onClose: () =>
           )}
 
           {!proofSrc && (
-            <div style={{ marginBottom: 16, background: '#FEF9C3', border: '1px solid #FDE047', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#713F12' }}>
-              ⚠️ المستخدم لم يرفع صورة إيصال — تحقق يدوياً من حسابك البنكي
+            <div style={{ marginBottom: 16, background: '#FEF9C3', border: '1px solid #FDE047', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#713F12', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <AlertTriangle size={14} />
+              المستخدم لم يرفع صورة إيصال — تحقق يدوياً من حسابك البنكي
             </div>
           )}
 
@@ -134,12 +135,12 @@ function ActionModal({ req, onClose, onDone }: { req: PayRequest; onClose: () =>
           {/* Actions */}
           <div style={{ display: 'flex', gap: 12 }}>
             <button onClick={() => act('APPROVE')} disabled={!!loading}
-              style={{ flex: 1, padding: '13px 0', background: loading === 'approve' ? 'rgba(5,150,105,.4)' : '#059669', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
+              style={{ flex: 1, padding: '13px 0', background: loading === 'approve' ? 'rgba(5,150,105,.4)' : '#059669', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
               {loading === 'approve' ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={16} />}
               موافقة وترقية
             </button>
             <button onClick={() => act('REJECT')} disabled={!!loading}
-              style={{ flex: 1, padding: '13px 0', background: loading === 'reject' ? 'rgba(220,38,38,.35)' : '#DC2626', color: '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
+              style={{ flex: 1, padding: '13px 0', background: loading === 'reject' ? 'rgba(220,38,38,.35)' : '#DC2626', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}>
               {loading === 'reject' ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <X size={16} />}
               رفض
             </button>
@@ -150,7 +151,10 @@ function ActionModal({ req, onClose, onDone }: { req: PayRequest; onClose: () =>
   );
 }
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function AdminPaymentsPage() {
+  useDocumentTitle('طلبات الدفع');
   const [requests, setRequests] = useState<PayRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'PENDING' | 'ALL' | 'APPROVED' | 'REJECTED'>('PENDING');
@@ -186,7 +190,7 @@ export default function AdminPaymentsPage() {
           </h1>
           <p style={{ fontSize: 14, color: C.muted, margin: 0 }}>راجع طلبات الترقية وتحقق من مدفوعات QR</p>
         </div>
-        <button onClick={load} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 12, cursor: 'pointer', fontSize: 13, color: C.p, fontFamily: 'inherit', fontWeight: 600 }}>
+        <button onClick={load} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, cursor: 'pointer', fontSize: 13, color: C.p, fontFamily: 'inherit', fontWeight: 600 }}>
           <RefreshCw size={15} />
           تحديث
         </button>
@@ -212,7 +216,7 @@ export default function AdminPaymentsPage() {
           <div style={{ fontSize: 16, fontWeight: 600 }}>لا توجد طلبات {filter === 'PENDING' ? 'معلقة' : ''}</div>
         </div>
       ) : (
-        <div style={{ background: C.bgAlt, border: `1.5px solid ${C.border}`, borderRadius: 20, overflow: 'hidden' }}>
+        <div style={{ background: C.bgAlt, border: `1.5px solid ${C.border}`, borderRadius: 10, overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
@@ -234,7 +238,7 @@ export default function AdminPaymentsPage() {
                         {r.user.whatsapp && (
                           <a href={`https://wa.me/${r.user.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 3, color: '#25D366', fontSize: 10, fontWeight: 700, textDecoration: 'none' }}>
-                            💬 {r.user.whatsapp}
+                            <MessageCircle size={10} /> {r.user.whatsapp}
                           </a>
                         )}
                       </td>
@@ -265,7 +269,7 @@ export default function AdminPaymentsPage() {
                       <td style={{ padding: '14px 16px' }}>
                         {r.status === 'PENDING' ? (
                           <button onClick={() => setSelected(r)}
-                            style={{ padding: '7px 14px', background: C.p, color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                            style={{ padding: '7px 14px', background: C.p, color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                             مراجعة
                           </button>
                         ) : <span style={{ fontSize: 12, color: C.muted }}>تمت المعالجة</span>}
@@ -280,13 +284,13 @@ export default function AdminPaymentsPage() {
       )}
 
       {/* Instructions for admin */}
-      <div style={{ marginTop: 28, background: '#FEF9C3', border: '1px solid #FDE047', borderRadius: 14, padding: '16px 20px', fontSize: 13, color: '#713F12', lineHeight: 1.8 }}>
-        <div style={{ fontWeight: 700, marginBottom: 6 }}>💡 كيف تتحقق من الدفع؟</div>
+      <div style={{ marginTop: 28, background: '#FEF9C3', border: '1px solid #FDE047', borderRadius: 10, padding: '16px 20px', fontSize: 13, color: '#713F12', lineHeight: 1.8 }}>
+        <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><Lightbulb size={14} /> كيف تتحقق من الدفع؟</div>
         <ol style={{ margin: 0, paddingRight: 20, lineHeight: 2 }}>
           <li>افتح تطبيق بنكك وتحقق من وجود حوالة بالمبلغ المطلوب</li>
           <li>طابق رقم المرجع الذي أرسله المستخدم مع رقم العملية في حسابك</li>
-          <li>اضغط "موافقة وترقية" إذا تطابقت البيانات — سيتم تفعيل خطته فوراً</li>
-          <li>اضغط "رفض" مع ذكر السبب إذا لم تجد الحوالة</li>
+          <li>اضغط &quot;موافقة وترقية&quot; إذا تطابقت البيانات — سيتم تفعيل خطته فوراً</li>
+          <li>اضغط &quot;رفض&quot; مع ذكر السبب إذا لم تجد الحوالة</li>
         </ol>
       </div>
     </div>

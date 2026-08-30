@@ -8,7 +8,7 @@ import { formatDate } from '@/lib/utils';
 import { useEditorStore } from '@/lib/stores/editor.store';
 import { Search, ToggleLeft, ToggleRight, ExternalLink, PenSquare, ChevronLeft, ShieldOff, ShieldCheck, X } from 'lucide-react';
 
-const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#E8BCB9' };
+const B = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', soft: '#FBE1EA' };
 
 interface StoreItem {
   id: string; name: string; slug: string;
@@ -18,7 +18,10 @@ interface StoreItem {
   _count: { products: number; orders: number };
 }
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function AdminStoresPage() {
+  useDocumentTitle('المتاجر');
   const [stores, setStores] = useState<StoreItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -120,13 +123,13 @@ export default function AdminStoresPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="ابحث عن متجر..."
-          style={{ width: '100%', padding: '9px 36px 9px 12px', border: '1.5px solid #E8E0F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+          style={{ width: '100%', padding: '9px 36px 9px 12px', border: '1.5px solid #ECE6F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
         />
       </div>
 
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[1,2,3].map(i => <div key={i} style={{ height: 80, background: '#E8E0F0', borderRadius: 12 }} />)}
+          {[1,2,3].map(i => <div key={i} style={{ height: 80, background: '#ECE6F0', borderRadius: 12 }} />)}
         </div>
       ) : stores.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px 0', color: '#9CA3AF', fontSize: 14 }}>لا يوجد متاجر</div>
@@ -135,18 +138,18 @@ export default function AdminStoresPage() {
           {stores.map((store) => {
             const isSuspended = !store.isActive && !!store.suspendedAt;
             return (
-              <div key={store.id} style={{ background: '#fff', borderRadius: 14, padding: '14px 18px', border: '1px solid #E8E0F0', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EDE8F5', color: B.p, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
+              <div key={store.id} style={{ background: '#fff', borderRadius: 10, padding: '14px 18px', border: '1px solid #ECE6F0', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0E7F8', color: B.p, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
                   {store.name.charAt(0).toUpperCase()}
                 </div>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <p style={{ fontWeight: 700, color: B.p, margin: 0, fontSize: 14 }}>{store.name}</p>
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: isSuspended ? '#FEE2E2' : store.isActive ? '#D1FAE5' : '#F3F4F6', color: isSuspended ? '#DC2626' : store.isActive ? '#059669' : '#6B7280' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: isSuspended ? '#FEE2E2' : store.isActive ? '#D1FAE5' : '#F3F4F6', color: isSuspended ? '#DC2626' : store.isActive ? '#059669' : '#6B7280' }}>
                       {isSuspended ? 'موقوف' : store.isActive ? 'نشط' : 'معطّل'}
                     </span>
-                    {store.isPublished && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#EDE8F5', color: B.s }}>منشور</span>}
+                    {store.isPublished && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10, background: '#F0E7F8', color: B.s }}>منشور</span>}
                   </div>
                   <p style={{ fontSize: 12, color: '#6B7280', margin: '3px 0 0' }}>
                     /store/{store.slug} · {store._count.products} منتج · {store._count.orders} طلب
@@ -162,12 +165,12 @@ export default function AdminStoresPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {isSuspended ? (
                     <button onClick={() => handleUnsuspend(store.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#059669', background: '#D1FAE5', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#059669', background: '#D1FAE5', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit' }}>
                       <ShieldCheck size={13} /> رفع الإيقاف
                     </button>
                   ) : (
                     <button onClick={() => { setSuspendModal(store); setSuspendReason(''); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#DC2626', background: '#FEE2E2', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: '#DC2626', background: '#FEE2E2', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit' }}>
                       <ShieldOff size={13} /> إيقاف
                     </button>
                   )}
@@ -177,23 +180,23 @@ export default function AdminStoresPage() {
                       onClick={() => toggleStore(store.id, !store.isActive)}
                       disabled={togglingId === store.id}
                       title={store.isActive ? 'تعطيل المتجر' : 'تفعيل المتجر'}
-                      style={{ padding: 6, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8, color: store.isActive ? '#059669' : '#9CA3AF', opacity: togglingId === store.id ? 0.5 : 1 }}
+                      style={{ padding: 6, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 10, color: store.isActive ? '#059669' : '#9CA3AF', opacity: togglingId === store.id ? 0.5 : 1 }}
                     >
                       {store.isActive ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                     </button>
                   )}
 
                   <button onClick={() => handleEnterEditor(store)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: B.s, background: '#EDE8F5', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: B.s, background: '#F0E7F8', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit' }}>
                     <PenSquare size={13} /> تحرير
                   </button>
 
                   <a href={`/store/${store.slug}`} target="_blank" rel="noopener noreferrer"
-                    style={{ padding: 6, background: 'transparent', borderRadius: 8, color: '#9CA3AF', display: 'flex', alignItems: 'center' }}>
+                    style={{ padding: 6, background: 'transparent', borderRadius: 10, color: '#9CA3AF', display: 'flex', alignItems: 'center' }}>
                     <ExternalLink size={15} />
                   </a>
 
-                  <Link href={`/admin/stores/${store.id}`} style={{ padding: 6, background: 'transparent', borderRadius: 8, color: '#9CA3AF', display: 'flex', alignItems: 'center' }}>
+                  <Link href={`/admin/stores/${store.id}`} style={{ padding: 6, background: 'transparent', borderRadius: 10, color: '#9CA3AF', display: 'flex', alignItems: 'center' }}>
                     <ChevronLeft size={15} />
                   </Link>
                 </div>
@@ -206,10 +209,10 @@ export default function AdminStoresPage() {
       {/* Suspend Modal */}
       {suspendModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.5)' }}>
-          <div style={{ background: '#fff', borderRadius: 20, padding: 28, width: '100%', maxWidth: 400, margin: '0 16px', boxShadow: '0 20px 60px rgba(0,0,0,.25)' }}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 28, width: '100%', maxWidth: 400, margin: '0 16px', boxShadow: '0 20px 60px rgba(0,0,0,.25)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ fontWeight: 800, color: B.p, margin: 0, fontSize: 16 }}>إيقاف المتجر</h3>
-              <button onClick={() => setSuspendModal(null)} style={{ padding: 4, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 6, color: '#9CA3AF' }}>
+              <button onClick={() => setSuspendModal(null)} style={{ padding: 4, background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 10, color: '#9CA3AF' }}>
                 <X size={16} />
               </button>
             </div>

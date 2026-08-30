@@ -90,8 +90,8 @@ export function GoogleSignInButton({ onSuccess, label = 'المتابعة مع G
         type="button"
         disabled
         style={{
-          width: '100%', padding: '11px 0', border: '1.5px solid #E8BCB9',
-          borderRadius: 12, background: '#FAFAFA', cursor: 'not-allowed',
+          width: '100%', padding: '11px 0', border: '1.5px solid #FBE1EA',
+          borderRadius: 10, background: '#FAFAFA', cursor: 'not-allowed',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           fontSize: 14, color: '#9CA3AF', fontFamily: 'inherit',
         }}

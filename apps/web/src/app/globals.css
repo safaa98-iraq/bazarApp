@@ -2,50 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Brand tokens ─── */
+/* ─── Brand tokens — "Bazar" design system ─── */
 @layer base {
   :root {
-    --background: 270 30% 98%;
-    --foreground: 273 29% 15%;
+    --background: 60 33% 97%;
+    --foreground: 245 27% 22%;
     --card: 0 0% 100%;
-    --card-foreground: 273 29% 15%;
+    --card-foreground: 245 27% 22%;
     --popover: 0 0% 100%;
-    --popover-foreground: 273 29% 15%;
-    --primary: 273 29% 25%;
+    --popover-foreground: 245 27% 22%;
+    --primary: 245 27% 22%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 249 28% 36%;
+    --secondary: 344 46% 65%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 270 20% 94%;
-    --muted-foreground: 249 15% 50%;
-    --accent: 348 44% 47%;
+    --muted: 40 22% 91%;
+    --muted-foreground: 249 12% 51%;
+    --accent: 210 51% 51%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 270 20% 88%;
-    --input: 270 20% 88%;
-    --ring: 273 29% 25%;
-    --radius: 0.75rem;
-    --brand-primary: #432E54;
-    --brand-secondary: #4B4376;
-    --brand-accent: #AE445A;
-    --brand-light: #E8BCB9;
-    --brand-surface: #F5F0FA;
+    --border: 210 30% 89%;
+    --input: 210 30% 89%;
+    --ring: 210 51% 51%;
+    --radius: 10px;
+
+    /* Backgrounds */
+    --bg-cream: #FBF9F2;
+    --bg-beige: #EDE8DF;
+    --bg-white: #FFFFFF;
+
+    /* Lavender */
+    --lavender: #E8DFF6;
+    --lavender-light: #F0E7F8;
+    --lavender-lighter: #F5EFFA;
+
+    /* Pink */
+    --pink-light: #FBE1EA;
+    --pink-mid: #F5A8C2;
+    --pink: #DB6E93;
+    --pink-shadow: #A64C71;
+
+    /* Blue */
+    --blue-light: #DEEEFB;
+    --blue-mid: #7EB2E0;
+    --blue: #4A8AC7;
+    --blue-hover: #3671A8;
+    --blue-border: #DCE6F0;
+
+    /* Yellow */
+    --yellow-pale: #F5F6DF;
+    --yellow: #F5DE7A;
+
+    /* Green */
+    --green-light: #DCEEDA;
+    --green: #4F9F63;
+
+    /* Text */
+    --text-primary: #2F2E4B;
+    --text-secondary: #4A4767;
+    --text-muted: #6B6A83;
+    --text-shadow: #1E1D34;
+
+    /* Legacy aliases kept so older components using these still land on the new palette */
+    --brand-primary: var(--text-primary);
+    --brand-secondary: var(--text-secondary);
+    --brand-accent: var(--pink);
+    --brand-light: var(--pink-light);
+    --brand-surface: var(--lavender-lighter);
   }
 
   * { border-color: hsl(var(--border)); }
 
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    background-color: var(--bg-cream);
+    color: var(--text-primary);
     font-feature-settings: "rlig" 1, "calt" 1;
+    text-wrap: pretty;
   }
 
   [dir="rtl"] { text-align: right; }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #3a2448; border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: #AE445A; }
+  ::-webkit-scrollbar-thumb { background: var(--text-primary); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink); }
 }
 
 /* ─── Keyframes ─── */
@@ -166,13 +206,13 @@
 
 /* ─── Gradient text ─── */
 .text-gradient {
-  background: linear-gradient(135deg, #fff 0%, #E8BCB9 55%, #AE445A 100%);
+  background: linear-gradient(135deg, #fff 0%, #F5A8C2 55%, #DB6E93 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .text-gradient-warm {
-  background: linear-gradient(135deg, #E8BCB9 0%, #AE445A 100%);
+  background: linear-gradient(135deg, #F5A8C2 0%, #DB6E93 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -181,7 +221,7 @@
 /* ─── Shimmer button ─── */
 .btn-shimmer {
   background-size: 400% 100%;
-  background-image: linear-gradient(90deg, #AE445A 0%, #432E54 25%, #AE445A 50%, #432E54 75%, #AE445A 100%);
+  background-image: linear-gradient(90deg, #DB6E93 0%, #2F2E4B 25%, #DB6E93 50%, #2F2E4B 75%, #DB6E93 100%);
   animation: shimmer 4s linear infinite;
 }
 .btn-shimmer:hover { animation-duration: 1.5s; }
@@ -243,6 +283,12 @@ a[href="/dashboard/settings?tab=billing"].inline-flex.border {
   .hero-inner > div:last-child  { display: none !important; }
   .features-grid { grid-template-columns: 1fr !important; }
   .pricing-grid  { grid-template-columns: 1fr !important; max-width: 400px; margin: 0 auto; }
+  .templates-grid { grid-template-columns: 1fr !important; }
+  .blog-grid { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 900px) and (min-width: 601px) {
+  .templates-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .blog-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
 /* ─── Mobile: Landing page sections ─── */
@@ -263,5 +309,34 @@ a[href="/dashboard/settings?tab=billing"].inline-flex.border {
   .lp-stats-row {
     grid-template-columns: 1fr 1fr !important;
     gap: 12px !important;
+  }
+
+  /* New section grids — stack to 1 column */
+  .value-props-grid,
+  .work-grid,
+  .marketing-grid,
+  .whatsnew-grid,
+  .stories-grid,
+  .compare-grid,
+  .final-cta-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .steps-grid-h {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .integrations-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .final-cta-grid > div:last-child {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 768px) {
+  .value-props-grid,
+  .marketing-grid,
+  .whatsnew-grid,
+  .stories-grid {
+    grid-template-columns: 1fr 1fr !important;
   }
 }

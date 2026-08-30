@@ -14,7 +14,7 @@
     "db:push": "npm run db:push --workspace=packages/database",
     "db:studio": "npm run db:studio --workspace=packages/database",
     "db:seed": "npm run db:seed --workspace=packages/database",
-    "lint": "npm run lint --workspaces",
+    "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present"
   },
   "devDependencies": {

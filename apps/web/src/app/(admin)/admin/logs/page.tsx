@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import { Search } from 'lucide-react';
 
-const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#E8BCB9' };
+const B = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', soft: '#FBE1EA' };
 
 interface LogEntry {
   id: string;
@@ -43,7 +43,10 @@ const ACTION_LABELS: Record<string, string> = {
   EDITOR_EXIT:          'خروج محرر',
 };
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function AdminLogsPage() {
+  useDocumentTitle('سجل النشاطات');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -83,26 +86,26 @@ export default function AdminLogsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="فلتر حسب نوع الإجراء..."
-          style={{ width: '100%', padding: '9px 36px 9px 12px', border: '1.5px solid #E8E0F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+          style={{ width: '100%', padding: '9px 36px 9px 12px', border: '1.5px solid #ECE6F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
         />
       </div>
 
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {[1,2,3,4,5].map(i => <div key={i} style={{ height: 56, background: '#E8E0F0', borderRadius: 10 }} />)}
+          {[1,2,3,4,5].map(i => <div key={i} style={{ height: 56, background: '#ECE6F0', borderRadius: 10 }} />)}
         </div>
       ) : logs.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px 0', color: '#9CA3AF', fontSize: 14 }}>لا يوجد سجلات</div>
       ) : (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8E0F0', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #ECE6F0', overflow: 'hidden' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {logs.map((log, idx) => {
-              const st = ACTION_STYLES[log.action] ?? { bg: '#EDE8F5', color: B.s };
+              const st = ACTION_STYLES[log.action] ?? { bg: '#F0E7F8', color: B.s };
               const label = ACTION_LABELS[log.action] ?? log.action.replace(/_/g, ' ');
               return (
-                <div key={log.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 20px', borderBottom: idx < logs.length - 1 ? '1px solid #F3F0F8' : 'none', background: idx % 2 === 0 ? '#fff' : '#FDFCFE' }}>
+                <div key={log.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 20px', borderBottom: idx < logs.length - 1 ? '1px solid #F5EFFA' : 'none', background: idx % 2 === 0 ? '#fff' : '#FDFCFE' }}>
                   <div style={{ flexShrink: 0, marginTop: 2 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 10, background: st.bg, color: st.color, whiteSpace: 'nowrap' }}>
                       {label}
                     </span>
                   </div>

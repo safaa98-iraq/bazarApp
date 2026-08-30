@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { Users, TrendingDown, Activity, AlertTriangle, ChevronRight } from 'lucide-react';
 
-const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#F5F0FA', border: '#E8BCB9' };
+const B = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', soft: '#F5EFFA', border: '#FBE1EA' };
 
 interface FunnelStep { step: string; count: number; }
 interface FeatureRow  { event: string; uses: number; merchants: number; }
@@ -69,7 +69,10 @@ function KpiCard({ title, value, sub, icon, bg }: {
   );
 }
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function MerchantAnalyticsPage() {
+  useDocumentTitle('تحليلات التجار');
   const [data, setData] = useState<TrackData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -83,7 +86,7 @@ export default function MerchantAnalyticsPage() {
 
   if (loading) return (
     <div className="p-8 space-y-4">
-      {[1,2,3,4].map(i => <div key={i} className="h-24 rounded-2xl animate-pulse" style={{ background: '#E8E0F0' }} />)}
+      {[1,2,3,4].map(i => <div key={i} className="h-24 rounded-2xl animate-pulse" style={{ background: '#ECE6F0' }} />)}
     </div>
   );
 
@@ -119,7 +122,7 @@ export default function MerchantAnalyticsPage() {
           title="إجمالي التجار"
           value={data.funnel[0]?.count ?? 0}
           icon={<Users className="h-5 w-5" style={{ color: B.s }} />}
-          bg="#EDE8F5"
+          bg="#F0E7F8"
         />
         <KpiCard
           title="أكملوا الإعداد"

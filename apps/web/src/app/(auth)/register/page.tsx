@@ -10,19 +10,20 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/stores/auth.store';
 import { AuthResponse } from '@storebuilder/types';
-import { Loader2, Eye, EyeOff, ShoppingBag, Mail, User, Lock, Check, Shield, Zap, Gift, Phone } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ShoppingBag, Mail, User, Lock, Check, Shield, Zap, Gift, Phone, Shirt, Sparkles, Gamepad2, Smartphone, Gem, Flower2, BookOpen, UtensilsCrossed, LayoutGrid, type LucideIcon } from 'lucide-react';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
-
-const STAR = 'M50,5 L57.65,31.5 L81.82,18.18 L68.48,42.35 L95,50 L68.48,57.65 L81.82,81.82 L57.65,68.5 L50,95 L42.35,68.5 L18.18,81.82 L31.52,57.65 L5,50 L31.52,42.35 L18.18,18.18 L42.35,31.5 Z';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
 const C = {
-  bg:     '#FFF0EB',
-  p:      '#432E54',
-  s:      '#4B4376',
-  a:      '#AE445A',
-  text:   '#1C0E2E',
-  muted:  '#7B6B8D',
-  border: '#E8BCB9',
+  bg:     '#FBF9F2',
+  p:      '#2F2E4B',
+  s:      '#4A4767',
+  a:      '#DB6E93',
+  blue:      '#4A8AC7',
+  blueHover: '#3671A8',
+  text:   '#2F2E4B',
+  muted:  '#6B6A83',
+  border: '#FBE1EA',
 };
 
 const schema = z.object({
@@ -36,6 +37,17 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
+function extractReferralCode(raw: string): string | undefined {
+  const value = raw.trim();
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    return url.searchParams.get('ref') ?? undefined;
+  } catch {
+    return value;
+  }
+}
+
 const PERKS = [
   { Icon: ShoppingBag, text: 'متجر احترافي فوراً'      },
   { Icon: Zap,         text: 'جاهز في أقل من ٥ دقائق' },
@@ -44,6 +56,7 @@ const PERKS = [
 ];
 
 function RegisterForm() {
+  useDocumentTitle('إنشاء حساب');
   const router = useRouter();
   const login  = useAuthStore(s => s.login);
   const [loading, setLoading] = useState(false);
@@ -51,11 +64,18 @@ function RegisterForm() {
 
   const searchParams = useSearchParams();
   const templateParam = searchParams.get('template');
+  const [referralInput, setReferralInput] = useState(() => searchParams.get('ref') ?? '');
 
-  const TEMPLATE_META: Record<string, { name: string; icon: string; color: string; accent: string; tagline: string }> = {
-    fashion:      { name: 'متجر الملابس والأزياء',       icon: '👗', color: '#7C3F6B', accent: '#D4547A', tagline: 'أنيق، جذاب، يبيع' },
-    beauty:       { name: 'متجر البشرة والمكياج',        icon: '💄', color: '#9B3A6B', accent: '#E8627A', tagline: 'الجمال الحقيقي يبدأ من هنا' },
-    electronics:  { name: 'متجر الألعاب والإلكترونيات', icon: '🎮', color: '#1A0A2E', accent: '#7C3AED', tagline: 'عالم التقنية والترفيه' },
+  const TEMPLATE_META: Record<string, { name: string; icon: LucideIcon; color: string; accent: string; tagline: string }> = {
+    fashion:      { name: 'متجر الأزياء النسائية',        icon: Shirt,          color: '#7C3F6B', accent: '#D4547A', tagline: 'أنيق، جذاب، يبيع' },
+    'fashion-men':{ name: 'متجر الأزياء الرجالية',        icon: Shirt,          color: '#1F2A44', accent: '#3B5BA5', tagline: 'أناقة رجالية بلا حدود' },
+    jewelry:      { name: 'متجر المجوهرات',                icon: Gem,            color: '#8A6D1F', accent: '#C9A227', tagline: 'بريق يليق بك' },
+    perfume:      { name: 'متجر العطور',                    icon: Flower2,        color: '#5B3A29', accent: '#C08552', tagline: 'عطرك الذي يعبّر عنك' },
+    beauty:       { name: 'متجر البشرة والمكياج',          icon: Sparkles,       color: '#9B3A6B', accent: '#E8627A', tagline: 'الجمال الحقيقي يبدأ من هنا' },
+    electronics:  { name: 'متجر الألعاب والإلكترونيات',   icon: Gamepad2,       color: '#1A0A2E', accent: '#7C3AED', tagline: 'عالم التقنية والترفيه' },
+    books:        { name: 'متجر الكتب والقرطاسية',         icon: BookOpen,       color: '#2E4A3D', accent: '#4E8368', tagline: 'اكتشف عالماً من القراءة' },
+    food:         { name: 'متجر الأطعمة',                   icon: UtensilsCrossed, color: '#8C3A2B', accent: '#E07A45', tagline: 'نكهة تستحق التجربة' },
+    general:      { name: 'متجر عام',                       icon: LayoutGrid,     color: '#2F2E4B', accent: '#DB6E93', tagline: 'كل ما تحتاجه في مكان واحد' },
   };
   const tplMeta = templateParam ? TEMPLATE_META[templateParam] : null;
 
@@ -67,7 +87,7 @@ function RegisterForm() {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const payload = { ...data, whatsapp: data.whatsapp || undefined };
+      const payload = { ...data, whatsapp: data.whatsapp || undefined, referralCode: extractReferralCode(referralInput) };
       const res = await api.post<{ success: boolean; data: AuthResponse }>('/api/auth/register', payload);
       login(res.data.user, res.data.token);
       toast.success('تم إنشاء الحساب! أنشئ متجرك الآن');
@@ -82,38 +102,25 @@ function RegisterForm() {
   return (
     <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', fontFamily: 'var(--font-tajawal)', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Islamic star decorations */}
-      <svg style={{ position: 'absolute', top: -120, right: -120, width: 520, height: 520, opacity: 0.038, pointerEvents: 'none', animation: 'rotate-slow 140s linear infinite' }} viewBox="0 0 100 100">
-        <path d={STAR} fill="none" stroke={C.p} strokeWidth=".4" />
-      </svg>
-      <svg style={{ position: 'absolute', bottom: -60, left: -60, width: 280, height: 280, opacity: 0.03, pointerEvents: 'none', animation: 'rotate-rev 80s linear infinite' }} viewBox="0 0 100 100">
-        <path d={STAR} fill="none" stroke={C.a} strokeWidth=".5" />
-      </svg>
-
       {/* Left value panel */}
-      <div className="auth-left-panel" style={{ display: 'flex', flex: '0 0 44%', background: `linear-gradient(145deg, ${C.p} 0%, ${C.s} 55%, #2d1445 100%)`, flexDirection: 'column', justifyContent: 'center', padding: '64px 56px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px)`, backgroundSize: '48px 48px' }} />
-        <svg style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, height: 400, opacity: 0.06, animation: 'rotate-slow 90s linear infinite', pointerEvents: 'none' }} viewBox="0 0 100 100">
-          <path d={STAR} fill="none" stroke="#fff" strokeWidth=".35" />
-        </svg>
-
+      <div className="auth-left-panel" style={{ display: 'flex', flex: '0 0 44%', background: C.p, flexDirection: 'column', justifyContent: 'center', padding: '64px 56px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'relative', zIndex: 1 }}>
           {/* Logo */}
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 56 }}>
-            <div style={{ width: 42, height: 42, background: 'rgba(255,255,255,.15)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShoppingBag size={22} color="#fff" strokeWidth={1.75} />
+            <div style={{ width: 40, height: 40, background: 'rgba(255,255,255,.1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShoppingBag size={20} color="#fff" strokeWidth={1.75} />
             </div>
-            <span style={{ fontFamily: 'var(--font-cairo)', fontWeight: 900, fontSize: 20, color: '#fff' }}>Store<span style={{ color: 'rgba(232,188,185,.9)' }}>Builder</span></span>
+            <span style={{ fontFamily: 'var(--font-cairo)', fontWeight: 800, fontSize: 24, color: '#fff' }}>بازار</span>
           </Link>
 
           {tplMeta ? (
             /* Template-specific left panel */
             <div>
-              <div style={{ fontSize: 80, marginBottom: 24, filter: 'drop-shadow(0 8px 24px rgba(0,0,0,.3))' }}>{tplMeta.icon}</div>
+              <div style={{ marginBottom: 24, filter: 'drop-shadow(0 8px 24px rgba(0,0,0,.3))', color: '#fff' }}><tplMeta.icon size={80} strokeWidth={1.25} /></div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 100, padding: '5px 14px', marginBottom: 16 }}>
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', fontWeight: 600 }}>قالب مختار</span>
               </div>
-              <h1 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 900, fontSize: 'clamp(28px, 3vw, 42px)', color: '#fff', lineHeight: 1.2, margin: '0 0 12px' }}>{tplMeta.name}</h1>
+              <h1 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 800, fontSize: 'clamp(28px, 3vw, 42px)', color: '#fff', lineHeight: 1.2, margin: '0 0 12px' }}>{tplMeta.name}</h1>
               <p style={{ fontSize: 16, color: 'rgba(255,255,255,.6)', marginBottom: 40 }}>{tplMeta.tagline}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {['سيُطبَّق القالب تلقائياً بعد التسجيل', 'يمكنك تغيير الألوان والخطوط بحرية', 'جميع القوالب مُحسَّنة للموبايل', 'إعداد المتجر في أقل من دقيقتين'].map(f => (
@@ -134,9 +141,9 @@ function RegisterForm() {
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block', animation: 'badge-pulse 2s infinite' }} />
                   <span style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', fontWeight: 600 }}>+2,400 تاجر يبيعون الآن</span>
                 </div>
-                <h1 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 900, fontSize: 'clamp(32px, 3.5vw, 48px)', color: '#fff', lineHeight: 1.2, margin: '0 0 16px' }}>
+                <h1 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 800, fontSize: 'clamp(32px, 3.5vw, 48px)', color: '#fff', lineHeight: 1.2, margin: '0 0 16px' }}>
                   ابنِ متجرك
-                  <span style={{ display: 'block', background: 'linear-gradient(135deg, rgba(232,188,185,.95), rgba(174,68,90,.9))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  <span style={{ display: 'block', color: C.a }}>
                     في 5 دقائق
                   </span>
                 </h1>
@@ -147,7 +154,7 @@ function RegisterForm() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {PERKS.map(({ Icon, text }) => (
                   <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 11, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Icon size={18} color="rgba(232,188,185,.85)" strokeWidth={1.75} />
                     </div>
                     <span style={{ fontSize: 14, color: 'rgba(255,255,255,.6)', fontWeight: 500 }}>{text}</span>
@@ -157,7 +164,7 @@ function RegisterForm() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 48 }}>
                 <div style={{ display: 'flex' }}>
                   {['أ','ف','م','س'].map((lt, i) => (
-                    <div key={i} style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(67,46,84,.8)', background: `rgba(255,255,255,${0.1 + i * 0.03})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.8)', marginLeft: i > 0 ? -10 : 0 }}>{lt}</div>
+                    <div key={i} style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(47,46,75,.8)', background: `rgba(255,255,255,${0.1 + i * 0.03})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.8)', marginLeft: i > 0 ? -10 : 0 }}>{lt}</div>
                   ))}
                 </div>
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,.38)' }}>
@@ -174,13 +181,13 @@ function RegisterForm() {
         <div style={{ width: '100%', maxWidth: 400 }}>
 
           <div style={{ textAlign: 'center', marginBottom: 36 }}>
-            <h2 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 900, fontSize: 24, color: C.text, marginBottom: 8 }}>
+            <h2 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 800, fontSize: 24, color: C.text, marginBottom: 8 }}>
               {tplMeta ? `ابدأ بـ${tplMeta.name}` : 'افتح متجرك مجاناً'}
             </h2>
             <p style={{ fontSize: 14, color: C.muted }}>30 ثانية وتكون جاهزاً</p>
           </div>
 
-          <div style={{ background: '#FFFFFF', border: `1px solid ${C.border}`, borderRadius: 24, padding: '40px 36px', boxShadow: '0 8px 40px rgba(67,46,84,.07)' }}>
+          <div style={{ background: '#FFFFFF', border: `1px solid ${C.border}`, borderRadius: 10, padding: '40px 36px', boxShadow: '0 8px 40px rgba(47,46,75,.07)' }}>
 
             {/* Google Sign-Up */}
             <div style={{ marginBottom: 6 }}>
@@ -203,8 +210,8 @@ function RegisterForm() {
                   <input
                     {...register('name')}
                     placeholder="محمد أحمد"
-                    style={{ width: '100%', padding: '12px 44px 12px 16px', background: C.bg, border: `1.5px solid ${errors.name ? 'rgba(239,68,68,.5)' : C.border}`, borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, transition: 'border-color .2s', caretColor: C.a }}
-                    onFocus={e => (e.target.style.borderColor = 'rgba(174,68,90,.4)')}
+                    style={{ width: '100%', padding: '12px 44px 12px 16px', background: C.bg, border: `1.5px solid ${errors.name ? 'rgba(239,68,68,.5)' : C.border}`, borderRadius: 10, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, transition: 'border-color .2s', caretColor: C.a }}
+                    onFocus={e => (e.target.style.borderColor = 'rgba(219,110,147,.4)')}
                     onBlur={e => (e.target.style.borderColor = errors.name ? 'rgba(239,68,68,.5)' : C.border)}
                   />
                   <User size={16} color={C.muted} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -221,8 +228,8 @@ function RegisterForm() {
                     type="email"
                     placeholder="you@example.com"
                     dir="ltr"
-                    style={{ width: '100%', padding: '12px 16px 12px 44px', background: C.bg, border: `1.5px solid ${errors.email ? 'rgba(239,68,68,.5)' : C.border}`, borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, textAlign: 'left', transition: 'border-color .2s', caretColor: C.a }}
-                    onFocus={e => (e.target.style.borderColor = 'rgba(174,68,90,.4)')}
+                    style={{ width: '100%', padding: '12px 16px 12px 44px', background: C.bg, border: `1.5px solid ${errors.email ? 'rgba(239,68,68,.5)' : C.border}`, borderRadius: 10, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, textAlign: 'left', transition: 'border-color .2s', caretColor: C.a }}
+                    onFocus={e => (e.target.style.borderColor = 'rgba(219,110,147,.4)')}
                     onBlur={e => (e.target.style.borderColor = errors.email ? 'rgba(239,68,68,.5)' : C.border)}
                   />
                   <Mail size={16} color={C.muted} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -238,8 +245,8 @@ function RegisterForm() {
                     {...register('password')}
                     type={showPw ? 'text' : 'password'}
                     placeholder="8 أحرف على الأقل"
-                    style={{ width: '100%', padding: '12px 44px 12px 44px', background: C.bg, border: `1.5px solid ${errors.password ? 'rgba(239,68,68,.5)' : C.border}`, borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, transition: 'border-color .2s', caretColor: C.a }}
-                    onFocus={e => (e.target.style.borderColor = 'rgba(174,68,90,.4)')}
+                    style={{ width: '100%', padding: '12px 44px 12px 44px', background: C.bg, border: `1.5px solid ${errors.password ? 'rgba(239,68,68,.5)' : C.border}`, borderRadius: 10, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, transition: 'border-color .2s', caretColor: C.a }}
+                    onFocus={e => (e.target.style.borderColor = 'rgba(219,110,147,.4)')}
                     onBlur={e => (e.target.style.borderColor = errors.password ? 'rgba(239,68,68,.5)' : C.border)}
                   />
                   <Lock size={16} color={C.muted} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -276,23 +283,46 @@ function RegisterForm() {
                     type="tel"
                     placeholder="+9647XXXXXXXXX"
                     dir="ltr"
-                    style={{ width: '100%', padding: '12px 16px 12px 44px', background: C.bg, border: `1.5px solid ${errors.whatsapp ? 'rgba(239,68,68,.5)' : C.border}`, borderRadius: 12, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, textAlign: 'left', transition: 'border-color .2s', caretColor: C.a }}
+                    style={{ width: '100%', padding: '12px 16px 12px 44px', background: C.bg, border: `1.5px solid ${errors.whatsapp ? 'rgba(239,68,68,.5)' : C.border}`, borderRadius: 10, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, textAlign: 'left', transition: 'border-color .2s', caretColor: C.a }}
                     onFocus={e => (e.target.style.borderColor = 'rgba(5,150,105,.4)')}
                     onBlur={e => (e.target.style.borderColor = errors.whatsapp ? 'rgba(239,68,68,.5)' : C.border)}
                   />
                   <Phone size={16} color="#25D366" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                 </div>
                 {errors.whatsapp && <p style={{ color: '#DC2626', fontSize: 12, marginTop: 6 }}>{errors.whatsapp.message}</p>}
-                <p style={{ fontSize: 11, color: C.muted, marginTop: 5 }}>
-                  📲 سنرسل لك إشعار واتساب عند تفعيل خطتك
+                <p style={{ fontSize: 11, color: C.muted, marginTop: 5, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Smartphone size={12} />
+                  سنرسل لك إشعار واتساب عند تفعيل خطتك
                 </p>
+              </div>
+
+              {/* Referral code */}
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: C.p, marginBottom: 8 }}>
+                  كود الدعوة
+                  <span style={{ color: C.muted, fontWeight: 500, fontSize: 12, marginRight: 6 }}>(اختياري — إن كان صديق قد دعاك)</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    value={referralInput}
+                    onChange={e => setReferralInput(e.target.value)}
+                    placeholder="الصق رابط الدعوة أو أدخل الكود"
+                    dir="ltr"
+                    style={{ width: '100%', padding: '12px 16px 12px 44px', background: C.bg, border: `1.5px solid ${C.border}`, borderRadius: 10, fontSize: 14, outline: 'none', fontFamily: 'inherit', color: C.text, textAlign: 'left', transition: 'border-color .2s', caretColor: C.a }}
+                    onFocus={e => (e.target.style.borderColor = 'rgba(219,110,147,.4)')}
+                    onBlur={e => (e.target.style.borderColor = C.border)}
+                  />
+                  <Gift size={16} color={C.a} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                </div>
               </div>
 
               {/* Submit */}
               <button
                 type="submit"
                 disabled={loading}
-                style={{ width: '100%', padding: '14px 0', background: loading ? `rgba(174,68,90,.45)` : `linear-gradient(135deg, ${C.a}, ${C.p})`, color: '#fff', fontWeight: 700, fontSize: 15, border: 'none', borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', marginTop: 4, boxShadow: loading ? 'none' : '0 6px 24px rgba(174,68,90,.22)', transition: 'all .2s' }}>
+                style={{ width: '100%', padding: '14px 0', background: loading ? 'rgba(74,138,199,.5)' : C.blue, color: '#fff', fontWeight: 700, fontSize: 15, border: 'none', borderRadius: 10, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', marginTop: 4, transition: 'background .2s' }}
+                onMouseEnter={e => { if (!loading) e.currentTarget.style.background = C.blueHover; }}
+                onMouseLeave={e => { if (!loading) e.currentTarget.style.background = C.blue; }}>
                 {loading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> جارٍ الإنشاء...</> : 'افتح متجرك مجاناً'}
               </button>
             </form>
@@ -317,7 +347,7 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#FFF0EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 40, height: 40, border: '3px solid #432E54', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#FBF9F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 40, height: 40, border: '3px solid #2F2E4B', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>}>
       <RegisterForm />
     </Suspense>
   );

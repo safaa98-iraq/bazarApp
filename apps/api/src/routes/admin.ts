@@ -4,7 +4,6 @@ import { logAdminAction } from '../middleware/adminLog';
 import { adminService } from '../services/admin.service';
 import { storeService } from '../services/store.service';
 import { productService } from '../services/product.service';
-import { orderService } from '../services/order.service';
 import prisma from '@storebuilder/database';
 
 const router = Router();
@@ -311,6 +310,26 @@ router.get('/analytics', async (_req: Request, res: Response, next: NextFunction
   try {
     const analytics = await adminService.getAnalytics();
     res.json({ success: true, data: analytics });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/analytics/compare-stores', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const rows = await adminService.compareStores();
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Merchant health signals ───────────────────────────────────────────────────
+
+router.get('/merchant-issues', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const issues = await adminService.getMerchantIssues();
+    res.json({ success: true, data: issues });
   } catch (err) {
     next(err);
   }

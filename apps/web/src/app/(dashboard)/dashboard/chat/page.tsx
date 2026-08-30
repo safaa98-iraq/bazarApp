@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { MessageCircle, Send, Clock, CheckCheck, Search, Zap, X, Plus, User, Mail, Phone, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -9,7 +10,7 @@ import { useAuthStore } from '@/lib/stores/auth.store';
 import { PlanGate } from '@/components/ui/PlanGate';
 import { canUseFeature, Plan } from '@/lib/plan-features';
 
-const BRAND = { primary: '#432E54', secondary: '#4B4376', accent: '#AE445A', light: '#E8BCB9' };
+const BRAND = { primary: '#2F2E4B', secondary: '#4A4767', accent: '#DB6E93', light: '#FBE1EA' };
 
 interface Conversation {
   id: string;
@@ -39,7 +40,12 @@ interface QuickReply {
   body: string;
 }
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function ChatPage() {
+  useDocumentTitle('المحادثات');
+  const searchParams = useSearchParams();
+  const targetConvId = searchParams.get('conversationId');
   const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
@@ -54,13 +60,18 @@ export default function ChatPage() {
   const [newQR, setNewQR] = useState({ title: '', body: '' });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const loadedOnce = useRef(false);
 
   const fetchConversations = useCallback(async () => {
     try {
       const res = await api.get<{ success: boolean; data: Conversation[] }>('/api/chat/conversations');
       setConversations(res.data ?? []);
-    } catch { /* silent */ }
-    finally { setLoading(false); }
+    } catch (err: unknown) {
+      // Swallow errors on background polling ticks, but surface the initial-load failure —
+      // otherwise a broken endpoint just looks like an empty, permanently-loading inbox.
+      if (!loadedOnce.current) toast.error(err instanceof Error ? err.message : 'فشل تحميل المحادثات');
+    }
+    finally { loadedOnce.current = true; setLoading(false); }
   }, []);
 
   const fetchMessages = useCallback(async (convId: string) => {
@@ -78,7 +89,12 @@ export default function ChatPage() {
     } catch { /* silent */ }
   }, []);
 
-  useEffect(() => { fetchConversations(); fetchQuickReplies(); }, [fetchConversations, fetchQuickReplies]);
+  useEffect(() => {
+    fetchConversations();
+    fetchQuickReplies();
+    const t = setInterval(fetchConversations, 6000);
+    return () => clearInterval(t);
+  }, [fetchConversations, fetchQuickReplies]);
 
   useEffect(() => {
     if (!selectedConv) return;
@@ -95,6 +111,14 @@ export default function ChatPage() {
     setSelectedConv(conv);
     setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, unreadCount: 0 } : c));
   };
+
+  // Auto-open a conversation deep-linked from the notification bell (?conversationId=...)
+  useEffect(() => {
+    if (!targetConvId || selectedConv?.id === targetConvId) return;
+    const match = conversations.find(c => c.id === targetConvId);
+    if (match) selectConversation(match);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetConvId, conversations]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,11 +173,11 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden" dir="rtl" style={{ background: '#F9F7FC' }}>
+    <div className="flex h-screen overflow-hidden" dir="rtl" style={{ background: '#F5EFFA' }}>
       {/* Sidebar — conversation list */}
-      <div className="w-80 flex flex-col border-l" style={{ background: 'white', borderColor: '#E8E0F0' }}>
+      <div className="w-80 flex flex-col border-l" style={{ background: 'white', borderColor: '#ECE6F0' }}>
         {/* Header */}
-        <div className="px-4 py-4 border-b" style={{ borderColor: '#E8E0F0' }}>
+        <div className="px-4 py-4 border-b" style={{ borderColor: '#ECE6F0' }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" style={{ color: BRAND.accent }} />
@@ -174,7 +198,7 @@ export default function ChatPage() {
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ابحث في المحادثات…"
               className="w-full pr-9 pl-3 py-2 rounded-xl border text-xs focus:outline-none"
-              style={{ borderColor: '#E8E0F0' }} />
+              style={{ borderColor: '#ECE6F0' }} />
           </div>
         </div>
 
@@ -191,8 +215,8 @@ export default function ChatPage() {
             <button key={conv.id} onClick={() => selectConversation(conv)}
               className="w-full text-right px-4 py-3 border-b hover:bg-purple-50/50 transition"
               style={{
-                borderColor: '#F5F0FA',
-                background: selectedConv?.id === conv.id ? '#F5F0FA' : undefined,
+                borderColor: '#F5EFFA',
+                background: selectedConv?.id === conv.id ? '#F5EFFA' : undefined,
               }}>
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
@@ -227,7 +251,7 @@ export default function ChatPage() {
       {selectedConv ? (
         <div className="flex-1 flex flex-col">
           {/* Chat header */}
-          <div className="flex items-center justify-between px-6 py-4 bg-white border-b" style={{ borderColor: '#E8E0F0' }}>
+          <div className="flex items-center justify-between px-6 py-4 bg-white border-b" style={{ borderColor: '#ECE6F0' }}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
                 style={{ background: BRAND.accent }}>
@@ -242,7 +266,7 @@ export default function ChatPage() {
               {selectedConv.status === 'open' && (
                 <button onClick={() => closeConversation(selectedConv.id)}
                   className="px-3 py-1.5 text-xs font-bold rounded-xl border transition hover:bg-gray-50"
-                  style={{ borderColor: '#E8E0F0', color: '#6b7280' }}>
+                  style={{ borderColor: '#ECE6F0', color: '#6b7280' }}>
                   إغلاق المحادثة
                 </button>
               )}
@@ -261,7 +285,7 @@ export default function ChatPage() {
                     ? 'text-white rounded-tr-none'
                     : 'bg-white border rounded-tl-none'
                 }`}
-                  style={msg.senderType === 'agent' ? { background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` } : { borderColor: '#E8E0F0', color: '#374151' }}>
+                  style={msg.senderType === 'agent' ? { background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` } : { borderColor: '#ECE6F0', color: '#374151' }}>
                   {msg.senderType === 'customer' && (
                     <p className="text-xs font-semibold mb-1" style={{ color: BRAND.accent }}>{msg.senderName}</p>
                   )}
@@ -294,12 +318,12 @@ export default function ChatPage() {
           {/* Input */}
           <form onSubmit={sendMessage}
             className="flex items-center gap-3 px-6 py-4 bg-white border-t"
-            style={{ borderColor: '#E8E0F0' }}>
+            style={{ borderColor: '#ECE6F0' }}>
             <input value={msgText} onChange={e => setMsgText(e.target.value)}
               placeholder={selectedConv.status === 'closed' ? 'المحادثة مغلقة' : 'اكتب رسالة…'}
               disabled={selectedConv.status === 'closed' || sending}
               className="flex-1 px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 disabled:bg-gray-50 disabled:text-gray-400"
-              style={{ borderColor: '#E8E0F0' }} />
+              style={{ borderColor: '#ECE6F0' }} />
             <button type="submit" disabled={!msgText.trim() || selectedConv.status === 'closed' || sending}
               className="p-2.5 rounded-xl text-white transition disabled:opacity-40 flex items-center justify-center"
               style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}>
@@ -317,8 +341,8 @@ export default function ChatPage() {
 
       {/* Customer info sidebar — right side (inside selected conv) */}
       {selectedConv && (
-        <div className="w-64 flex flex-col bg-white border-r" style={{ borderColor: '#E8E0F0' }}>
-          <div className="px-4 py-4 border-b" style={{ borderColor: '#E8E0F0' }}>
+        <div className="w-64 flex flex-col bg-white border-r" style={{ borderColor: '#ECE6F0' }}>
+          <div className="px-4 py-4 border-b" style={{ borderColor: '#ECE6F0' }}>
             <h3 className="text-sm font-bold" style={{ color: BRAND.primary }}>بيانات العميل</h3>
           </div>
           <div className="p-4 space-y-4">
@@ -352,7 +376,7 @@ export default function ChatPage() {
               <span>منذ {selectedConv.updatedAt ? formatDate(selectedConv.updatedAt) : '—'}</span>
             </div>
 
-            <div className="pt-2 border-t" style={{ borderColor: '#F5F0FA' }}>
+            <div className="pt-2 border-t" style={{ borderColor: '#F5EFFA' }}>
               <p className="text-xs font-semibold mb-2" style={{ color: BRAND.secondary }}>الردود السريعة</p>
               {quickReplies.length === 0 ? (
                 <p className="text-xs text-gray-400">لا توجد ردود سريعة</p>
@@ -377,7 +401,7 @@ export default function ChatPage() {
       {showQuickReplies && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" dir="rtl">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#E8E0F0' }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#ECE6F0' }}>
               <h2 className="font-bold" style={{ color: BRAND.primary }}>الردود السريعة</h2>
               <button onClick={() => setShowQuickReplies(false)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
                 <X className="h-4 w-4" />
@@ -385,7 +409,7 @@ export default function ChatPage() {
             </div>
             <div className="p-5 space-y-3 max-h-80 overflow-y-auto">
               {quickReplies.map(qr => (
-                <div key={qr.id} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: '#F9F7FC' }}>
+                <div key={qr.id} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: '#F5EFFA' }}>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold" style={{ color: BRAND.primary }}>{qr.title}</p>
                     <p className="text-xs text-gray-500 mt-0.5 truncate">{qr.body}</p>
@@ -398,22 +422,22 @@ export default function ChatPage() {
               {quickReplies.length === 0 && <p className="text-sm text-gray-400 text-center py-4">لا توجد ردود سريعة بعد</p>}
             </div>
             {showNewQR ? (
-              <div className="p-5 border-t space-y-3" style={{ borderColor: '#E8E0F0' }}>
+              <div className="p-5 border-t space-y-3" style={{ borderColor: '#ECE6F0' }}>
                 <input value={newQR.title} onChange={e => setNewQR(n => ({ ...n, title: e.target.value }))}
                   placeholder="عنوان الرد (مثال: شكراً لتواصلك)"
                   className="w-full px-3 py-2 rounded-xl border text-sm focus:outline-none"
-                  style={{ borderColor: '#E8E0F0' }} />
+                  style={{ borderColor: '#ECE6F0' }} />
                 <textarea value={newQR.body} onChange={e => setNewQR(n => ({ ...n, body: e.target.value }))}
                   placeholder="نص الرد…" rows={3}
                   className="w-full px-3 py-2 rounded-xl border text-sm focus:outline-none resize-none"
-                  style={{ borderColor: '#E8E0F0' }} />
+                  style={{ borderColor: '#ECE6F0' }} />
                 <div className="flex gap-2">
-                  <button onClick={() => setShowNewQR(false)} className="flex-1 py-2 border rounded-xl text-sm text-gray-500 hover:bg-gray-50" style={{ borderColor: '#E8E0F0' }}>إلغاء</button>
+                  <button onClick={() => setShowNewQR(false)} className="flex-1 py-2 border rounded-xl text-sm text-gray-500 hover:bg-gray-50" style={{ borderColor: '#ECE6F0' }}>إلغاء</button>
                   <button onClick={addQuickReply} className="flex-1 py-2 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}>حفظ</button>
                 </div>
               </div>
             ) : (
-              <div className="p-5 border-t" style={{ borderColor: '#E8E0F0' }}>
+              <div className="p-5 border-t" style={{ borderColor: '#ECE6F0' }}>
                 <button onClick={() => setShowNewQR(true)}
                   className="w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                   style={{ background: `${BRAND.primary}10`, color: BRAND.primary }}>

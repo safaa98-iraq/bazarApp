@@ -7,9 +7,10 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useEditorStore } from '@/lib/stores/editor.store';
 import Link from 'next/link';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
-const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#E8BCB9' };
+const B = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', soft: '#FBE1EA' };
 
 interface StoreDetail {
   id: string;
@@ -27,6 +28,7 @@ export default function StoreEditorPage() {
   const [store, setStore] = useState<StoreDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  useDocumentTitle(store ? `تحرير: ${store.name}` : 'تحرير المتجر');
   const { enterEditorMode, isEditorMode } = useEditorStore();
 
   const { register, handleSubmit, reset } = useForm<Partial<StoreDetail>>();
@@ -69,7 +71,7 @@ export default function StoreEditorPage() {
   if (loading || !store) {
     return (
       <div style={{ padding: 32 }}>
-        <div style={{ height: 32, background: '#E8E0F0', borderRadius: 8, width: 200 }} />
+        <div style={{ height: 32, background: '#ECE6F0', borderRadius: 10, width: 200 }} />
       </div>
     );
   }
@@ -82,32 +84,33 @@ export default function StoreEditorPage() {
 
       <h1 style={{ fontSize: 22, fontWeight: 800, color: B.p, margin: '0 0 6px' }}>تحرير: {store.name}</h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, padding: '10px 14px', background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: 10, fontSize: 13, color: '#92400E' }}>
-        ⚠ أنت تعدّل هذا المتجر كمشرف — كل التغييرات مسجّلة في سجل المراقبة.
+        <AlertTriangle size={16} />
+        أنت تعدّل هذا المتجر كمشرف — كل التغييرات مسجّلة في سجل المراقبة.
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8E0F0', padding: 24, marginBottom: 16 }}>
+        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #ECE6F0', padding: 24, marginBottom: 16 }}>
           <h2 style={{ fontSize: 15, fontWeight: 700, color: B.p, marginBottom: 20 }}>إعدادات المتجر</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: B.p, marginBottom: 6 }}>اسم المتجر</label>
-              <input {...register('name')} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E8E0F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
+              <input {...register('name')} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #ECE6F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: B.p, marginBottom: 6 }}>الوصف</label>
               <textarea
                 {...register('description')}
                 rows={3}
-                style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E8E0F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', resize: 'none' }}
+                style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #ECE6F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', resize: 'none' }}
               />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: B.p, marginBottom: 6 }}>لون العلامة التجارية</label>
-              <input type="color" {...register('theme')} style={{ height: 40, width: 80, borderRadius: 8, border: '1.5px solid #E8E0F0', cursor: 'pointer' }} />
+              <input type="color" {...register('theme')} style={{ height: 40, width: 80, borderRadius: 10, border: '1.5px solid #ECE6F0', cursor: 'pointer' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: B.p, marginBottom: 6 }}>القالب</label>
-              <select {...register('template')} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #E8E0F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#fff' }}>
+              <select {...register('template')} style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #ECE6F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#fff' }}>
                 <option value="minimal">بسيط</option>
                 <option value="bold">جريء</option>
                 <option value="magazine">مجلة</option>
@@ -123,7 +126,7 @@ export default function StoreEditorPage() {
         <button
           type="submit"
           disabled={saving}
-          style={{ width: '100%', padding: '13px 0', background: `linear-gradient(135deg,${B.p},${B.a})`, color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', borderRadius: 12, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}
+          style={{ width: '100%', padding: '13px 0', background: `linear-gradient(135deg,${B.p},${B.a})`, color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', borderRadius: 10, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit' }}
         >
           {saving && <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />}
           {saving ? 'جارٍ الحفظ...' : 'حفظ التغييرات (تحرير المشرف)'}

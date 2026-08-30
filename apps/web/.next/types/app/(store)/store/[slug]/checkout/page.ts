@@ -1,4 +1,4 @@
-// File: /Applications/XAMPP/xamppfiles/htdocs/bazar/apps/web/src/app/(store)/store/[slug]/checkout/page.tsx
+// File: D:\laragon\www\bazarApp-main\apps\web\src\app\(store)\store\[slug]\checkout\page.tsx
 import * as entry from '../../../../../../../src/app/(store)/store/[slug]/checkout/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

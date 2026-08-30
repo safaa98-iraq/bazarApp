@@ -1,13 +1,17 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, X, Check, CheckCheck, Zap, Crown, Shield, AlertCircle, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import {
+  Bell, X, Check, CheckCheck, Zap, Crown, Shield, AlertCircle, CreditCard, ChevronDown, ChevronUp,
+  Store, Package, Tag, BarChart3, PartyPopper, Sparkles, Rocket, XCircle, MessageCircle, type LucideIcon,
+} from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/stores/auth.store';
 
-const C = { p: '#432E54', s: '#4B4376', a: '#AE445A', text: '#1C0E2E', muted: '#7B6B8D', border: '#E8BCB9', bg: '#F5F0FA' };
+const C = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', text: '#2F2E4B', muted: '#6B6A83', border: '#FBE1EA', bg: '#F5EFFA' };
 
 const PLAN_ICONS: Record<string, typeof Zap> = { PRO: Zap, ENTERPRISE: Crown, FREE: Shield };
-const PLAN_COLORS: Record<string, string> = { PRO: '#432E54', ENTERPRISE: '#AE445A', FREE: '#7B6B8D' };
+const PLAN_COLORS: Record<string, string> = { PRO: '#2F2E4B', ENTERPRISE: '#DB6E93', FREE: '#6B6A83' };
 
 interface Notif {
   id: string;
@@ -28,11 +32,11 @@ function ApprovalModal({ notif, onClose }: ApprovalDetailProps) {
   const Icon = PLAN_ICONS[plan] ?? Zap;
   const color = PLAN_COLORS[plan] ?? C.p;
 
-  const ONBOARDING: { icon: string; title: string; desc: string; href: string }[] = [
-    { icon: '🏪', title: 'خصص متجرك', desc: 'اختر قالباً واضبط الألوان والشعار', href: '/dashboard/settings' },
-    { icon: '📦', title: 'أضف منتجاتك', desc: 'أضف منتجات غير محدودة مع الصور والوصف', href: '/dashboard/products' },
-    { icon: '🏷️', title: 'أنشئ كوبونات', desc: 'فعّل الخصومات لجذب المزيد من العملاء', href: '/dashboard/coupons' },
-    { icon: '📊', title: 'تابع التحليلات', desc: 'راقب المبيعات والزيارات في الوقت الفعلي', href: '/dashboard/analytics' },
+  const ONBOARDING: { icon: LucideIcon; title: string; desc: string; href: string }[] = [
+    { icon: Store, title: 'خصص متجرك', desc: 'اختر قالباً واضبط الألوان والشعار', href: '/dashboard/settings' },
+    { icon: Package, title: 'أضف منتجاتك', desc: 'أضف منتجات غير محدودة مع الصور والوصف', href: '/dashboard/products' },
+    { icon: Tag, title: 'أنشئ كوبونات', desc: 'فعّل الخصومات لجذب المزيد من العملاء', href: '/dashboard/coupons' },
+    { icon: BarChart3, title: 'تابع التحليلات', desc: 'راقب المبيعات والزيارات في الوقت الفعلي', href: '/dashboard/analytics' },
   ];
 
   return (
@@ -42,7 +46,7 @@ function ApprovalModal({ notif, onClose }: ApprovalDetailProps) {
     >
       <div
         onClick={e => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 28, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 40px 100px rgba(0,0,0,.35)' }}
+        style={{ background: '#fff', borderRadius: 10, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 40px 100px rgba(0,0,0,.35)' }}
       >
         {/* Hero */}
         <div style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)`, padding: '32px 28px 28px', textAlign: 'center', position: 'relative' }}>
@@ -52,7 +56,7 @@ function ApprovalModal({ notif, onClose }: ApprovalDetailProps) {
           <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', backdropFilter: 'blur(4px)' }}>
             <Icon size={36} color="#fff" strokeWidth={1.5} />
           </div>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+          <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center', color: '#fff' }}><PartyPopper size={30} /></div>
           <h2 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 900, fontSize: 22, color: '#fff', margin: '0 0 6px' }}>
             مرحباً بك في خطة {planAr}!
           </h2>
@@ -65,7 +69,7 @@ function ApprovalModal({ notif, onClose }: ApprovalDetailProps) {
           {/* Features unlocked */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ fontFamily: 'var(--font-cairo)', fontWeight: 800, fontSize: 15, color: C.text, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#05966915', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>✨</span>
+              <span style={{ width: 22, height: 22, borderRadius: '50%', background: '#05966915', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={12} color="#059669" /></span>
               المزايا المفعّلة الآن
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -83,16 +87,16 @@ function ApprovalModal({ notif, onClose }: ApprovalDetailProps) {
           {/* Onboarding steps */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontFamily: 'var(--font-cairo)', fontWeight: 800, fontSize: 15, color: C.text, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>🚀</span> ابدأ الآن — خطواتك الأولى
+              <Rocket size={15} color={color} /> ابدأ الآن — خطواتك الأولى
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {ONBOARDING.map(({ icon, title, desc, href }, i) => (
-                <a key={href} href={href} onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: C.bg, borderRadius: 14, textDecoration: 'none', border: `1.5px solid ${C.border}`, transition: 'all .15s' }}
+              {ONBOARDING.map(({ icon: StepIcon, title, desc, href }, i) => (
+                <a key={href} href={href} onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: C.bg, borderRadius: 10, textDecoration: 'none', border: `1.5px solid ${C.border}`, transition: 'all .15s' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = `${color}08`; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.bg; }}
                 >
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                    {icon}
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <StepIcon size={18} color={color} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, color: C.text }}>{title}</div>
@@ -108,9 +112,9 @@ function ApprovalModal({ notif, onClose }: ApprovalDetailProps) {
 
           <button
             onClick={onClose}
-            style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg,${color},${color}cc)`, color: '#fff', border: 'none', borderRadius: 14, fontWeight: 800, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 8px 24px ${color}40` }}
+            style={{ width: '100%', padding: '14px 0', background: `linear-gradient(135deg,${color},${color}cc)`, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 8px 24px ${color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
           >
-            ابدأ الآن 🚀
+            ابدأ الآن <Rocket size={16} />
           </button>
         </div>
       </div>
@@ -129,20 +133,26 @@ function timeAgo(iso: string): string {
 }
 
 function NotifItem({ n, onClick }: { n: Notif; onClick: (n: Notif) => void }) {
-  const iconMap: Record<string, string> = {
-    PAYMENT_REQUEST: '💳',
-    PLAN_APPROVED: '🎉',
-    PLAN_REJECTED: '❌',
+  const iconMap: Record<string, LucideIcon> = {
+    PAYMENT_REQUEST: CreditCard,
+    PLAN_APPROVED: PartyPopper,
+    PLAN_REJECTED: XCircle,
+    NEW_ORDER: Package,
+    CHAT_MESSAGE: MessageCircle,
   };
   const bgMap: Record<string, string> = {
     PAYMENT_REQUEST: '#FEF3C7',
     PLAN_APPROVED: '#F0FDF4',
     PLAN_REJECTED: '#FEF2F2',
+    NEW_ORDER: '#F0E7F8',
+    CHAT_MESSAGE: '#FBE1EA',
   };
   const colorMap: Record<string, string> = {
     PAYMENT_REQUEST: '#D97706',
     PLAN_APPROVED: '#059669',
     PLAN_REJECTED: '#DC2626',
+    NEW_ORDER: '#2F2E4B',
+    CHAT_MESSAGE: '#DB6E93',
   };
 
   return (
@@ -152,8 +162,8 @@ function NotifItem({ n, onClick }: { n: Notif; onClick: (n: Notif) => void }) {
       onMouseEnter={e => { e.currentTarget.style.background = '#F0EBF8'; }}
       onMouseLeave={e => { e.currentTarget.style.background = n.isRead ? 'transparent' : C.bg; }}
     >
-      <div style={{ width: 38, height: 38, borderRadius: '50%', background: bgMap[n.type] ?? '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-        {iconMap[n.type] ?? '🔔'}
+      <div style={{ width: 38, height: 38, borderRadius: '50%', background: bgMap[n.type] ?? '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {(() => { const NotifIcon = iconMap[n.type] ?? Bell; return <NotifIcon size={18} color={colorMap[n.type] ?? C.muted} />; })()}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
@@ -168,6 +178,7 @@ function NotifItem({ n, onClick }: { n: Notif; onClick: (n: Notif) => void }) {
 }
 
 export function NotificationBell({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
+  const router = useRouter();
   const { token } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notif[]>([]);
@@ -213,6 +224,14 @@ export function NotificationBell({ variant = 'dark' }: { variant?: 'dark' | 'lig
     if (n.type === 'PLAN_APPROVED') {
       setOpen(false);
       setActiveModal(n);
+    } else if (n.type === 'NEW_ORDER') {
+      setOpen(false);
+      const orderId = n.meta.orderId as string | undefined;
+      router.push(orderId ? `/dashboard/orders?highlight=${orderId}` : '/dashboard/orders');
+    } else if (n.type === 'CHAT_MESSAGE') {
+      setOpen(false);
+      const conversationId = n.meta.conversationId as string | undefined;
+      router.push(conversationId ? `/dashboard/chat?conversationId=${conversationId}` : '/dashboard/chat');
     }
   };
 
@@ -239,7 +258,7 @@ export function NotificationBell({ variant = 'dark' }: { variant?: 'dark' | 'lig
         </button>
 
         {open && (
-          <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', width: 340, background: '#fff', borderRadius: 18, boxShadow: '0 20px 60px rgba(0,0,0,.18)', border: `1px solid ${C.border}`, overflow: 'hidden', zIndex: 1000, animation: 'notif-drop .2s cubic-bezier(.16,1,.3,1)' }}>
+          <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', width: 340, background: '#fff', borderRadius: 10, boxShadow: '0 20px 60px rgba(0,0,0,.18)', border: `1px solid ${C.border}`, overflow: 'hidden', zIndex: 1000, animation: 'notif-drop .2s cubic-bezier(.16,1,.3,1)' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

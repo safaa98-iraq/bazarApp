@@ -1,14 +1,5 @@
 import prisma from '@storebuilder/database';
-
-export interface RecommendedProduct {
-  id: string;
-  name: string;
-  price: number;
-  comparePrice: number | null;
-  images: string[];
-  categoryId: string | null;
-  viewCount: number;
-}
+import { RecommendedProduct } from '@storebuilder/types';
 
 export class RecommendationsService {
   async trackView(productId: string, sessionId: string, customerId?: string): Promise<void> {

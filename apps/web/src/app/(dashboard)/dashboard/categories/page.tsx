@@ -9,7 +9,7 @@ import { Plan, getFeatureLimit } from '@/lib/plan-features';
 import Link from 'next/link';
 import { trackPage, track } from '@/lib/track';
 
-const B = { p: '#432E54', a: '#AE445A', border: '#E8BCB9', bg: '#F5F0FA', soft: '#FFF0EB' };
+const B = { p: '#2F2E4B', a: '#DB6E93', border: '#FBE1EA', bg: '#F5EFFA', soft: '#FBF9F2' };
 
 interface Category { id: string; name: string; slug: string; }
 
@@ -17,7 +17,10 @@ function toSlug(name: string) {
   return name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w؀-ۿ-]/g, '');
 }
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function CategoriesPage() {
+  useDocumentTitle('التصنيفات');
   const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
   const limit = getFeatureLimit(plan, 'categories') ?? 3;
 
@@ -106,7 +109,7 @@ export default function CategoriesPage() {
 
   if (loading) return (
     <div className="p-8 space-y-4">
-      {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl animate-pulse" style={{ background: '#E8E0F0' }} />)}
+      {[1, 2, 3].map(i => <div key={i} className="h-14 rounded-2xl animate-pulse" style={{ background: '#ECE6F0' }} />)}
     </div>
   );
 
@@ -159,9 +162,9 @@ export default function CategoriesPage() {
             placeholder="مثال: فساتين سهرة، سكين كير، ألعاب PS5…"
             disabled={atLimit || adding}
             style={{
-              flex: 1, padding: '11px 14px', borderRadius: 12, border: `1.5px solid ${B.border}`,
+              flex: 1, padding: '11px 14px', borderRadius: 10, border: `1.5px solid ${B.border}`,
               fontSize: 14, outline: 'none', fontFamily: 'inherit', background: atLimit ? '#fafafa' : '#fff',
-              color: '#1C0E2E', transition: 'border-color .2s',
+              color: '#2F2E4B', transition: 'border-color .2s',
             }}
             onFocus={e => { e.target.style.borderColor = B.a; }}
             onBlur={e => { e.target.style.borderColor = B.border; }}
@@ -171,7 +174,7 @@ export default function CategoriesPage() {
             disabled={!newName.trim() || atLimit || adding}
             style={{
               display: 'flex', alignItems: 'center', gap: 6, padding: '11px 18px',
-              borderRadius: 12, border: 'none', cursor: !newName.trim() || atLimit || adding ? 'not-allowed' : 'pointer',
+              borderRadius: 10, border: 'none', cursor: !newName.trim() || atLimit || adding ? 'not-allowed' : 'pointer',
               background: !newName.trim() || atLimit || adding ? '#e5e7eb' : `linear-gradient(135deg, ${B.p}, ${B.a})`,
               color: !newName.trim() || atLimit || adding ? '#9ca3af' : '#fff',
               fontSize: 14, fontWeight: 700, fontFamily: 'inherit', transition: 'all .2s',

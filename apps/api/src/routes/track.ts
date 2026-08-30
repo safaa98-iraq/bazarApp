@@ -1,7 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../middleware/auth';
 import prisma from '@storebuilder/database';
-import { Prisma } from '@prisma/client';
 
 const router = Router();
 

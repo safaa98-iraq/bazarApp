@@ -68,6 +68,21 @@ router.patch(
   }
 );
 
+// POST /api/stores/my/verify-domain — check DNS TXT record and mark custom domain verified
+router.post(
+  '/my/verify-domain',
+  verifyToken,
+  requireRole('MERCHANT'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const store = await storeService.verifyDomain(req.user!.userId);
+      res.json({ success: true, data: store });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // GET /api/stores/my/onboarding — returns which setup steps are done
 router.get(
   '/my/onboarding',

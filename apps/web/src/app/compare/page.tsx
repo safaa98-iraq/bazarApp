@@ -6,9 +6,9 @@ import { PlanPrice } from '@/components/pricing/PlanPrice';
 export const metadata = { title: 'بازار مقابل شوبيفاي — قارن بنفسك', description: 'لماذا يختار التجار العرب بازار بدلاً من شوبيفاي؟ مقارنة شاملة بالأسعار والميزات.' };
 
 const C = {
-  p: '#432E54', s: '#4B4376', a: '#AE445A',
-  text: '#1C0E2E', muted: '#7B6B8D', border: '#E8BCB9',
-  bg: '#FFF0EB', bgAlt: '#FFFFFF',
+  p: '#2F2E4B', s: '#4A4767', a: '#DB6E93',
+  text: '#2F2E4B', muted: '#6B6A83', border: '#FBE1EA',
+  bg: '#FBF9F2', bgAlt: '#FFFFFF',
 };
 
 interface CompRow {
@@ -19,8 +19,8 @@ interface CompRow {
 }
 
 const rows: CompRow[] = [
-  { label: 'السعر الشهري', bazar: `من ${PLAN_CONFIGS.FREE.priceIQD.toLocaleString()} د.ع حتى ${PLAN_CONFIGS.ENTERPRISE.priceIQD.toLocaleString()} د.ع`, shopify: '$29 — $299 / شهر' },
-  { label: 'السعر بعد الخصم للسنة الأولى', bazar: `من ${PLAN_CONFIGS.PRO.firstYearPriceIQD?.toLocaleString()} د.ع حتى ${PLAN_CONFIGS.ENTERPRISE.firstYearPriceIQD?.toLocaleString()} د.ع`, shopify: '—' },
+  { label: 'السعر الشهري', bazar: `من ${PLAN_CONFIGS.FREE.priceIQD.toLocaleString('en')} د.ع حتى ${PLAN_CONFIGS.ENTERPRISE.priceIQD.toLocaleString('en')} د.ع`, shopify: '$29 — $299 / شهر' },
+  { label: 'السعر بعد الخصم للسنة الأولى', bazar: `من ${PLAN_CONFIGS.PRO.firstYearPriceIQD?.toLocaleString('en')} د.ع حتى ${PLAN_CONFIGS.ENTERPRISE.firstYearPriceIQD?.toLocaleString('en')} د.ع`, shopify: '—' },
   { label: 'عمولة على كل بيعة', bazar: 'صفر % ✓', shopify: '0.5% — 2% ×' },
   { label: 'واجهة عربية كاملة', bazar: true, shopify: false },
   { label: 'دعم الدينار العراقي', bazar: true, shopify: false },
@@ -103,7 +103,7 @@ export default function ComparePage() {
             { label: 'عمولة', value: '0%', sub: 'على مبيعاتك', color: C.s, bg: '#EDE9FE', border: '#C4B5FD' },
             { label: 'دعم', value: '< ساعة', sub: 'استجابة واتساب', color: C.a, bg: '#FFF1F2', border: '#FECDD3' },
           ].map(({ label, value, sub, color, bg, border }) => (
-            <div key={label} style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 16, padding: '20px 28px', minWidth: 140 }}>
+            <div key={label} style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 10, padding: '20px 28px', minWidth: 140 }}>
               <div style={{ fontSize: 28, fontWeight: 900, color, fontFamily: 'var(--font-cairo)' }}>{value}</div>
               <div style={{ fontSize: 12, color, fontWeight: 700 }}>{label}</div>
               <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>
@@ -114,7 +114,7 @@ export default function ComparePage() {
 
       {/* Comparison table */}
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px 64px' }}>
-        <div style={{ background: C.bgAlt, border: `1.5px solid ${C.border}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 8px 32px rgba(67,46,84,.08)' }}>
+        <div style={{ background: C.bgAlt, border: `1.5px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', boxShadow: '0 8px 32px rgba(67,46,84,.08)' }}>
 
           {/* Column headers */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 140px', borderBottom: `2px solid ${C.border}` }}>
@@ -124,7 +124,7 @@ export default function ComparePage() {
 
             {/* Bazar */}
             <div style={{ padding: '16px 12px', textAlign: 'center', background: `${C.p}08`, borderRight: `1px solid ${C.border}` }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: `linear-gradient(135deg,${C.p},${C.a})`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg,${C.p},${C.a})`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
                 <Globe size={18} color="#fff" />
               </div>
               <div style={{ fontWeight: 900, fontSize: 15, color: C.p }}>بازار</div>
@@ -136,7 +136,7 @@ export default function ComparePage() {
 
             {/* Shopify */}
             <div style={{ padding: '16px 12px', textAlign: 'center' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: '#95BF47', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: '#95BF47', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
                 <Shield size={18} color="#fff" />
               </div>
               <div style={{ fontWeight: 800, fontSize: 15, color: '#374151' }}>Shopify</div>
@@ -197,8 +197,8 @@ export default function ComparePage() {
                 body: 'كل دينار تبيعه يصل إليك — بازار لا يأخذ نسبة من مبيعاتك مهما كانت.',
               },
             ].map(({ icon: Icon, color, title, body }) => (
-              <div key={title} style={{ background: C.bgAlt, border: `1.5px solid ${C.border}`, borderRadius: 16, padding: '22px 20px' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <div key={title} style={{ background: C.bgAlt, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '22px 20px' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
                   <Icon size={20} color={color} />
                 </div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: C.text, marginBottom: 8 }}>{title}</div>
@@ -209,7 +209,7 @@ export default function ComparePage() {
         </div>
 
         {/* CTA */}
-        <div style={{ marginTop: 48, background: `linear-gradient(135deg,${C.p},${C.a})`, borderRadius: 24, padding: '40px 32px', textAlign: 'center' }}>
+        <div style={{ marginTop: 48, background: `linear-gradient(135deg,${C.p},${C.a})`, borderRadius: 10, padding: '40px 32px', textAlign: 'center' }}>
           <h2 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 900, fontSize: 'clamp(18px,3vw,24px)', color: '#fff', margin: '0 0 10px' }}>
             ابدأ متجرك اليوم — مجاناً
           </h2>
@@ -219,14 +219,14 @@ export default function ComparePage() {
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link
               href="/register"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', borderRadius: 14, background: '#fff', color: C.p, fontWeight: 800, fontSize: 15, textDecoration: 'none', boxShadow: '0 8px 28px rgba(0,0,0,.2)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', borderRadius: 10, background: '#fff', color: C.p, fontWeight: 800, fontSize: 15, textDecoration: 'none', boxShadow: '0 8px 28px rgba(0,0,0,.2)' }}
             >
               <Zap size={16} />
               أنشئ متجرك مجاناً
             </Link>
             <Link
               href="/login"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', borderRadius: 14, border: '2px solid rgba(255,255,255,.35)', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 24px', borderRadius: 10, border: '2px solid rgba(255,255,255,.35)', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
             >
               <ArrowLeft size={14} />
               تسجيل الدخول

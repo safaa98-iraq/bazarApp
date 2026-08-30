@@ -91,4 +91,16 @@ router.post('/product/:productId', verifyToken, requireRole('MERCHANT'), async (
   } catch (e) { next(e); }
 });
 
+// DELETE /api/attributes/product/:productId/:attributeId — remove one spec from a product
+router.delete('/product/:productId/:attributeId', verifyToken, requireRole('MERCHANT'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const store = await getStore(req.user!.userId);
+    if (!store) { res.status(404).json({ success: false, error: 'Store not found' }); return; }
+    await prisma.productAttributeValue.deleteMany({
+      where: { productId: req.params.productId, attributeId: req.params.attributeId },
+    });
+    res.json({ success: true });
+  } catch (e) { next(e); }
+});
+
 export default router;
