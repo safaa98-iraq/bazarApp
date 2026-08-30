@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { Search, Download } from 'lucide-react';
 
-const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#E8BCB9' };
+const B = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', soft: '#FBE1EA' };
 
 interface AdminOrder {
   id: string;
@@ -26,7 +26,10 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
   CANCELLED: { bg: '#FEE2E2', color: '#991B1B', label: 'ملغي' },
 };
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function AdminOrdersPage() {
+  useDocumentTitle('كل الطلبات');
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -94,7 +97,7 @@ export default function AdminOrdersPage() {
         <button
           onClick={exportCsv}
           disabled={downloading}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', background: '#fff', border: `1.5px solid #E8E0F0`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: B.p, cursor: 'pointer', fontFamily: 'inherit', opacity: downloading ? 0.7 : 1 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', background: '#fff', border: `1.5px solid #ECE6F0`, borderRadius: 10, fontSize: 13, fontWeight: 600, color: B.p, cursor: 'pointer', fontFamily: 'inherit', opacity: downloading ? 0.7 : 1 }}
         >
           <Download size={15} />
           {downloading ? 'جارٍ التصدير...' : 'تصدير CSV'}
@@ -108,13 +111,13 @@ export default function AdminOrdersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="ابحث عن طلب..."
-            style={{ width: '100%', padding: '9px 36px 9px 12px', border: '1.5px solid #E8E0F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+            style={{ width: '100%', padding: '9px 36px 9px 12px', border: '1.5px solid #ECE6F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: '9px 14px', border: '1.5px solid #E8E0F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#fff', color: B.p }}
+          style={{ padding: '9px 14px', border: '1.5px solid #ECE6F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', background: '#fff', color: B.p }}
         >
           <option value="ALL">كل الحالات</option>
           <option value="PENDING">قيد الانتظار</option>
@@ -127,15 +130,15 @@ export default function AdminOrdersPage() {
 
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {[1,2,3].map(i => <div key={i} style={{ height: 56, background: '#E8E0F0', borderRadius: 10 }} />)}
+          {[1,2,3].map(i => <div key={i} style={{ height: 56, background: '#ECE6F0', borderRadius: 10 }} />)}
         </div>
       ) : filteredOrders.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px 0', color: '#9CA3AF', fontSize: 14 }}>لا يوجد طلبات</div>
       ) : (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8E0F0', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #ECE6F0', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #E8E0F0', background: '#F9F7FC' }}>
+              <tr style={{ borderBottom: '1px solid #ECE6F0', background: '#F5EFFA' }}>
                 <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: B.p, fontSize: 12 }}>رقم الطلب</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: B.p, fontSize: 12 }}>العميل</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: B.p, fontSize: 12 }}>المتجر</th>
@@ -148,7 +151,7 @@ export default function AdminOrdersPage() {
               {filteredOrders.map((order, idx) => {
                 const st = STATUS_STYLES[order.status] ?? { bg: '#F3F4F6', color: '#6B7280', label: order.status };
                 return (
-                  <tr key={order.id} style={{ borderBottom: '1px solid #F3F0F8', background: idx % 2 === 0 ? '#fff' : '#FDFCFE' }}>
+                  <tr key={order.id} style={{ borderBottom: '1px solid #F5EFFA', background: idx % 2 === 0 ? '#fff' : '#FDFCFE' }}>
                     <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 11, color: '#9CA3AF' }}>
                       #{order.id.slice(-8).toUpperCase()}
                     </td>
@@ -159,7 +162,7 @@ export default function AdminOrdersPage() {
                     <td style={{ padding: '12px 16px', color: '#6B7280' }}>{order.store.name}</td>
                     <td style={{ padding: '12px 16px', fontWeight: 700, color: B.p }}>{formatCurrency(order.total)}</td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: st.bg, color: st.color }}>{st.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 10, background: st.bg, color: st.color }}>{st.label}</span>
                     </td>
                     <td style={{ padding: '12px 16px', color: '#9CA3AF', fontSize: 11 }}>{formatDateTime(order.createdAt)}</td>
                   </tr>

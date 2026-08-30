@@ -4,17 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Trash2, Copy, Tag, Loader2, X, ToggleLeft, ToggleRight, Zap,
   TrendingUp, Instagram, Youtube, Twitter, Link2, DollarSign, ShoppingBag,
-  Pencil, ChevronDown, ChevronRight,
+  Pencil, ChevronDown, ChevronRight, Handshake, Users, type LucideIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { CouponPublic, AffiliatePublic } from '@storebuilder/types';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { useAuthStore } from '@/lib/stores/auth.store';
-import { canUseFeature, getFeatureLimit, Plan } from '@/lib/plan-features';
+import { canUseFeature, getFeatureLimit, Plan, PLAN_LABELS } from '@/lib/plan-features';
 import { PlanGate } from '@/components/ui/PlanGate';
 
-const BRAND = { primary: '#432E54', secondary: '#4B4376', accent: '#AE445A', border: '#E8BCB9', bg: '#F5F0FA' };
+const BRAND = { primary: '#2F2E4B', secondary: '#4A4767', accent: '#DB6E93', border: '#FBE1EA', bg: '#F5EFFA' };
 
 type TabKey = 'coupons' | 'affiliates';
 
@@ -94,10 +94,12 @@ function CouponsTab() {
           style={{ background: atLimit ? '#FEF2F2' : '#FEF3C7', borderColor: atLimit ? '#FECACA' : '#FCD34D' }}>
           <Zap className="h-4 w-4 flex-shrink-0" style={{ color: atLimit ? '#DC2626' : '#D97706' }} />
           <p className="text-sm flex-1" style={{ color: atLimit ? '#991B1B' : '#92400E' }}>
-            الخطة المجانية: {coupons.length} / {couponLimit} كوبون
+            {couponLimit === 0
+              ? 'أكواد الخصم غير متاحة في الخطة المجانية'
+              : `خطة ${PLAN_LABELS[plan]}: ${coupons.length} / ${couponLimit} كوبون`}
             {atLimit && ' — ارفع خطتك للمزيد'}
           </p>
-          {atLimit && <a href="/dashboard/upgrade" className="text-xs font-bold px-3 py-1.5 rounded-xl text-white" style={{ background: '#AE445A' }}>ارفع الآن</a>}
+          {atLimit && <a href="/dashboard/upgrade" className="text-xs font-bold px-3 py-1.5 rounded-xl text-white" style={{ background: '#DB6E93' }}>ارفع الآن</a>}
         </div>
       )}
 
@@ -136,12 +138,12 @@ function CouponsTab() {
       ) : (
         <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: BRAND.border }}>
           <table className="w-full text-sm">
-            <thead className="border-b" style={{ background: '#F5F0FA' }}>
+            <thead className="border-b" style={{ background: '#F5EFFA' }}>
               <tr>{['الكود', 'الخصم', 'الحد الأدنى', 'الاستخدام', 'الانتهاء', 'الحالة', 'إجراءات'].map(h => (
                 <th key={h} className="px-4 py-3 text-right font-semibold" style={{ color: BRAND.primary }}>{h}</th>
               ))}</tr>
             </thead>
-            <tbody className="divide-y divide-[#F5F0FA]">
+            <tbody className="divide-y divide-[#F5EFFA]">
               {coupons.map(c => {
                 const isExpired = c.expiresAt && new Date(c.expiresAt) < new Date();
                 const isExhausted = c.maxUses && c.usedCount >= c.maxUses;
@@ -160,7 +162,7 @@ function CouponsTab() {
                       {c.expiresAt ? <span style={{ color: isExpired ? '#ef4444' : 'inherit' }}>{isExpired ? 'منتهي' : formatDate(c.expiresAt)}</span> : '—'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: c.isActive && !isExpired && !isExhausted ? '#d1fae5' : '#F5F0FA', color: c.isActive && !isExpired && !isExhausted ? '#065f46' : '#6b7280' }}>
+                      <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: c.isActive && !isExpired && !isExhausted ? '#d1fae5' : '#F5EFFA', color: c.isActive && !isExpired && !isExhausted ? '#065f46' : '#6b7280' }}>
                         {isExpired ? 'منتهي' : isExhausted ? 'مستنفد' : c.isActive ? 'نشط' : 'موقوف'}
                       </span>
                     </td>
@@ -387,7 +389,7 @@ function AffiliatesTab() {
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin" style={{ color: BRAND.accent }} /></div>
       ) : affiliates.length === 0 ? (
         <div className="bg-white rounded-2xl border p-12 text-center" style={{ borderColor: BRAND.border }}>
-          <div className="text-5xl mb-3">🤝</div>
+          <div className="mb-3 flex justify-center"><Handshake size={48} style={{ color: BRAND.accent }} /></div>
           <p className="text-gray-400 mb-2">لا يوجد مؤثرون بعد</p>
           <button onClick={openNew} className="text-sm font-medium" style={{ color: BRAND.accent }}>+ أضف أول مؤثر</button>
         </div>
@@ -413,11 +415,11 @@ function AffiliatesTab() {
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500">
                     {aff.email && <span>{aff.email}</span>}
-                    {aff.followerCount && <span>👥 {aff.followerCount.toLocaleString('ar')}</span>}
+                    {aff.followerCount && <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" /> {aff.followerCount.toLocaleString('ar')}</span>}
                     {aff.couponCode && <span className="flex items-center gap-1" style={{ color: BRAND.secondary }}><Tag className="h-3 w-3" />{aff.couponCode}</span>}
                   </div>
                 </div>
-                <div className="text-center px-3 py-2 rounded-xl flex-shrink-0" style={{ background: '#F5F0FA' }}>
+                <div className="text-center px-3 py-2 rounded-xl flex-shrink-0" style={{ background: '#F5EFFA' }}>
                   <p className="text-lg font-bold" style={{ color: BRAND.accent }}>
                     {aff.commissionType === 'percent' ? `${aff.commissionRate}%` : formatCurrency(aff.commissionRate)}
                   </p>
@@ -451,7 +453,7 @@ function AffiliatesTab() {
                 </div>
               </div>
               {expandedId === aff.id && aff.notes && (
-                <div className="px-4 pb-4"><div className="rounded-xl p-3 text-xs text-gray-600" style={{ background: '#F9F7FC' }}>
+                <div className="px-4 pb-4"><div className="rounded-xl p-3 text-xs text-gray-600" style={{ background: '#F5EFFA' }}>
                   <p className="font-semibold mb-1" style={{ color: BRAND.secondary }}>ملاحظات</p><p>{aff.notes}</p>
                 </div></div>
               )}
@@ -586,12 +588,15 @@ function AffiliatesTab() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'coupons',   label: 'كوبونات الخصم',       icon: '🏷️' },
-  { key: 'affiliates', label: 'المسوقون بالعمولة', icon: '🤝' },
+const TABS: { key: TabKey; label: string; icon: LucideIcon }[] = [
+  { key: 'coupons',   label: 'كوبونات الخصم',       icon: Tag },
+  { key: 'affiliates', label: 'المسوقون بالعمولة', icon: Handshake },
 ];
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function MarketingPage() {
+  useDocumentTitle('التسويق');
   const [tab, setTab] = useState<TabKey>('coupons');
 
   return (
@@ -607,7 +612,7 @@ export default function MarketingPage() {
           <button key={t.key} onClick={() => setTab(t.key)}
             className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition -mb-px"
             style={{ borderBottomColor: tab === t.key ? BRAND.accent : 'transparent', color: tab === t.key ? BRAND.accent : '#9ca3af' }}>
-            <span>{t.icon}</span>{t.label}
+            <t.icon size={16} />{t.label}
           </button>
         ))}
       </div>

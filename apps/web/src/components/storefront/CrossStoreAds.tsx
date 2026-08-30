@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
-import { Megaphone } from 'lucide-react';
+import { Megaphone, Package } from 'lucide-react';
 
 interface CrossAd {
   id: string;
@@ -70,8 +70,8 @@ export function CrossStoreAds({ excludeStoreId }: { excludeStoreId: string }) {
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl text-gray-200">
-                  📦
+                <div className="w-full h-full flex items-center justify-center text-gray-200">
+                  <Package size={36} />
                 </div>
               )}
             </div>

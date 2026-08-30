@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Package, ShoppingCart, Settings, Palette, LogOut, Store,
-  MessageCircle, Lock, Zap, Crown, Menu, X, Megaphone, Tag,
+  MessageCircle, Lock, Zap, Crown, Menu, X, Megaphone, Tag, BadgeCheck, Gift,
+  CreditCard, Percent, FilePlus2, Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/stores/auth.store';
@@ -25,11 +26,17 @@ const links: NavLink[] = [
   { href: '/dashboard',             label: 'الرئيسية',        desc: 'نظرة عامة على مبيعاتك وطلباتك',          icon: LayoutDashboard, exact: true },
   { href: '/dashboard/products',    label: 'منتجاتي',         desc: 'أضف منتجاتك وعدّل أسعارها وصورها',       icon: Package },
   { href: '/dashboard/categories',  label: 'التصنيفات',       desc: 'أنشئ تصنيفات تظهر في رأس متجرك',          icon: Tag },
+  { href: '/dashboard/brands',      label: 'الماركات',        desc: 'أضف ماركات تجارية وصنّف منتجاتك تحتها',       icon: BadgeCheck, feature: 'brands' },
   { href: '/dashboard/orders',      label: 'الطلبات',         desc: 'تابع طلبات عملائك وحدّث حالتها',         icon: ShoppingCart },
+  { href: '/dashboard/draft-orders', label: 'طلبات يدوية',    desc: 'سجّل طلباً وصلك عبر واتساب أو انستغرام',       icon: FilePlus2 },
+  { href: '/dashboard/abandoned-carts', label: 'السلال المتروكة', desc: 'زبائن تركوا سلتهم قبل إتمام الطلب',        icon: Clock },
   { href: '/dashboard/chat',        label: 'رسائل العملاء',   desc: 'تحدث مع عملائك مباشرة من متجرك',              icon: MessageCircle, feature: 'chat' },
   { href: '/dashboard/builder',     label: 'شكل المتجر',      desc: 'صمّم متجرك وأضف البانرات الترويجية',          icon: Palette },
   { href: '/dashboard/marketing',   label: 'التسويق',         desc: 'كوبونات الخصم والمسوقون بالعمولة',            icon: Megaphone, feature: 'affiliates' },
+  { href: '/dashboard/promotions',  label: 'عروض تلقائية',    desc: 'اشترِ واحصل على آخر، أو خصم متدرج',            icon: Percent },
+  { href: '/dashboard/gift-cards',  label: 'بطاقات الهدايا',  desc: 'أصدر بطاقات هدايا برصيد للزبائن',              icon: CreditCard },
   { href: '/dashboard/settings',    label: 'إعدادات المتجر',  desc: 'اسم المتجر، العملة، الشعار، والرابط',         icon: Settings },
+  { href: '/dashboard/referrals',   label: 'ادعُ واربح',       desc: 'ادعُ تجاراً واربح أشهراً مجانية',              icon: Gift },
   { href: '/dashboard/upgrade',     label: 'الباقات والترقية', desc: 'قارن الباقات وارفع خطتك بضغطة واحدة',        icon: Crown },
 ];
 
@@ -66,7 +73,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       {/* Logo */}
       <div className="px-4 py-4 border-b border-white/10 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-3" onClick={onClose}>
-          <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#AE445A' }}>
+          <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#DB6E93' }}>
             <Store className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -98,7 +105,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
               href="/dashboard/upgrade"
               onClick={onClose}
               className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg transition hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #AE445A)', color: 'white' }}
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #DB6E93)', color: 'white' }}
             >
               <Zap className="h-3 w-3" />
               ارفع باقتك
@@ -122,7 +129,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
                 onClick={onClose}
                 className="group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-white/30 hover:text-white/50"
               >
-                <Tooltip text={`🔒 ${desc} — متاح في الخطة الاحترافية`} />
+                <Tooltip text={`${desc} — متاح في الخطة الاحترافية`} />
                 <Icon className="h-4 w-4 flex-shrink-0 opacity-40" />
                 <span className="flex-1 truncate">{label}</span>
                 <Lock className="h-3 w-3 opacity-40 flex-shrink-0" />
@@ -141,7 +148,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
                 isUpgrade && !active ? 'border border-white/10' : '',
               )}
               style={
-                active ? { background: '#4B4376' }
+                active ? { background: '#4A4767' }
                 : isUpgrade ? { background: 'rgba(174,68,90,0.15)' }
                 : undefined
               }
@@ -159,7 +166,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         <div className="flex items-center gap-3 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.07)' }}>
           <div
             className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-            style={{ background: '#AE445A' }}
+            style={{ background: '#DB6E93' }}
           >
             {user?.name?.charAt(0)?.toUpperCase() ?? 'م'}
           </div>
@@ -171,7 +178,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         <button
           onClick={handleLogout}
           className="mt-2 w-full flex items-center gap-2 px-3 py-2 text-sm rounded-xl transition hover:bg-white/10"
-          style={{ color: '#E8BCB9' }}
+          style={{ color: '#FBE1EA' }}
         >
           <LogOut className="h-4 w-4" />
           تسجيل الخروج
@@ -189,7 +196,7 @@ export function DashboardSidebar() {
       {/* Mobile top bar */}
       <div
         className="lg:hidden fixed top-0 right-0 left-0 z-40 flex items-center gap-3 px-4 py-3 border-b border-white/10"
-        style={{ background: '#432E54' }}
+        style={{ background: '#2F2E4B' }}
       >
         <button onClick={() => setMobileOpen(true)} className="text-white p-1">
           <Menu className="h-6 w-6" />
@@ -207,7 +214,7 @@ export function DashboardSidebar() {
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
           <aside
             className="relative w-72 max-w-[85vw] flex flex-col h-full mr-auto overflow-y-auto"
-            style={{ background: '#432E54' }}
+            style={{ background: '#2F2E4B' }}
           >
             <SidebarContent onClose={() => setMobileOpen(false)} />
           </aside>
@@ -215,7 +222,7 @@ export function DashboardSidebar() {
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 min-h-screen flex-col flex-shrink-0" style={{ background: '#432E54' }}>
+      <aside className="hidden lg:flex w-64 min-h-screen flex-col flex-shrink-0" style={{ background: '#2F2E4B' }}>
         <SidebarContent />
       </aside>
     </>

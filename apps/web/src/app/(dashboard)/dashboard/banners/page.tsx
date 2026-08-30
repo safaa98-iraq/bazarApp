@@ -1,16 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Megaphone, Plus, Trash2, Pencil, Eye, EyeOff, Loader2, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Megaphone, Plus, Trash2, Pencil, Eye, EyeOff, Loader2, X, Upload, ImageIcon, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/lib/stores/auth.store';
+import { getFeatureLimit, Plan } from '@/lib/plan-features';
 
-const BRAND = { primary: '#432E54', accent: '#AE445A', border: '#E8BCB9', bg: '#F5F0FA' };
+const BRAND = { primary: '#2F2E4B', accent: '#DB6E93', border: '#FBE1EA', bg: '#F5EFFA' };
 
 interface Banner {
   id: string;
   title: string;
   subtitle?: string | null;
+  imageUrl?: string | null;
   bgColor: string;
   textColor: string;
   linkUrl?: string | null;
@@ -22,6 +27,7 @@ interface Banner {
 interface BannerForm {
   title: string;
   subtitle: string;
+  imageUrl: string;
   bgColor: string;
   textColor: string;
   linkUrl: string;
@@ -31,19 +37,44 @@ interface BannerForm {
 const emptyForm: BannerForm = {
   title: '',
   subtitle: '',
-  bgColor: '#432E54',
+  imageUrl: '',
+  bgColor: '#2F2E4B',
   textColor: '#FFFFFF',
   linkUrl: '',
   isActive: true,
 };
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function BannersPage() {
+  useDocumentTitle('البانرات الإعلانية');
+  const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
+  const bannerLimit = getFeatureLimit(plan, 'banners');
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<BannerForm>(emptyForm);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const atLimit = bannerLimit != null && banners.length >= bannerLimit;
+
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('images', files[0]);
+      const res = await api.upload<{ success: boolean; data: { urls: string[] } }>('/api/upload', fd);
+      setForm(f => ({ ...f, imageUrl: res.data.urls[0] }));
+      toast.success('تم رفع الصورة');
+    } catch {
+      toast.error('فشل رفع الصورة');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const fetchBanners = useCallback(async () => {
     try {
@@ -69,6 +100,7 @@ export default function BannersPage() {
     setForm({
       title: b.title,
       subtitle: b.subtitle ?? '',
+      imageUrl: b.imageUrl ?? '',
       bgColor: b.bgColor,
       textColor: b.textColor,
       linkUrl: b.linkUrl ?? '',
@@ -83,6 +115,7 @@ export default function BannersPage() {
     const payload = {
       title: form.title.trim(),
       subtitle: form.subtitle.trim() || undefined,
+      imageUrl: form.imageUrl.trim() || undefined,
       bgColor: form.bgColor,
       textColor: form.textColor,
       linkUrl: form.linkUrl.trim() || undefined,
@@ -137,16 +170,24 @@ export default function BannersPage() {
         <div>
           <h1 className="text-2xl font-bold" style={{ color: BRAND.primary }}>البانرات الإعلانية</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {banners.length} بانر • {activeBanners} نشط
+            {banners.length} بانر{bannerLimit != null ? ` من أصل ${bannerLimit}` : ''} • {activeBanners} نشط
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition hover:opacity-90"
-          style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
-        >
-          <Plus className="h-4 w-4" /> إضافة بانر
-        </button>
+        {atLimit ? (
+          <Link href="/dashboard/settings?tab=billing"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition hover:opacity-90"
+            style={{ background: BRAND.bg, color: BRAND.primary }}>
+            <Lock className="h-4 w-4" /> بلغت الحد الأقصى — ارفع خطتك
+          </Link>
+        ) : (
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition hover:opacity-90"
+            style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}
+          >
+            <Plus className="h-4 w-4" /> إضافة بانر
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -191,23 +232,30 @@ export default function BannersPage() {
             >
               {/* Banner Preview Strip */}
               <div
-                className="px-5 py-4 flex items-center justify-between"
-                style={{ background: b.bgColor }}
+                className="px-5 py-4 flex items-center justify-between gap-3"
+                style={{ background: b.imageUrl ? '#F5EFFA' : b.bgColor }}
               >
-                <div>
-                  <p className="font-bold text-base leading-tight" style={{ color: b.textColor }}>
-                    {b.title}
-                  </p>
-                  {b.subtitle && (
-                    <p className="text-sm mt-0.5 opacity-80" style={{ color: b.textColor }}>
-                      {b.subtitle}
-                    </p>
+                <div className="flex items-center gap-3 min-w-0">
+                  {b.imageUrl && (
+                    <div className="relative rounded-lg overflow-hidden flex-shrink-0" style={{ width: 64, height: 40 }}>
+                      <Image src={b.imageUrl} alt={b.title} fill className="object-cover" />
+                    </div>
                   )}
+                  <div className="min-w-0">
+                    <p className="font-bold text-base leading-tight truncate" style={{ color: b.imageUrl ? BRAND.primary : b.textColor }}>
+                      {b.title}
+                    </p>
+                    {b.subtitle && (
+                      <p className="text-sm mt-0.5 opacity-80 truncate" style={{ color: b.imageUrl ? BRAND.primary : b.textColor }}>
+                        {b.subtitle}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 {b.linkUrl && (
                   <span
-                    className="text-xs font-semibold px-3 py-1 rounded-full border border-current opacity-70"
-                    style={{ color: b.textColor }}
+                    className="text-xs font-semibold px-3 py-1 rounded-full border border-current opacity-70 flex-shrink-0"
+                    style={{ color: b.imageUrl ? BRAND.primary : b.textColor }}
                   >
                     عرض
                   </span>
@@ -220,7 +268,7 @@ export default function BannersPage() {
                   <span
                     className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium"
                     style={{
-                      background: b.isActive ? '#d1fae5' : '#F5F0FA',
+                      background: b.isActive ? '#d1fae5' : '#F5EFFA',
                       color: b.isActive ? '#065f46' : '#9ca3af',
                     }}
                   >
@@ -312,6 +360,30 @@ export default function BannersPage() {
                   className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none transition"
                   style={{ borderColor: BRAND.border }}
                 />
+              </div>
+
+              {/* Image */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>
+                  صورة البانر (تظهر في متجرك كصورة قابلة للضغط)
+                </label>
+                {form.imageUrl ? (
+                  <div className="relative rounded-xl overflow-hidden mb-2" style={{ height: 110 }}>
+                    <Image src={form.imageUrl} alt="معاينة" fill className="object-cover" />
+                    <button type="button" onClick={() => setForm(f => ({ ...f, imageUrl: '' }))}
+                      className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 text-gray-400 hover:bg-purple-50 transition mb-2"
+                    style={{ borderColor: BRAND.border }}>
+                    {uploading ? <Loader2 className="h-5 w-5 animate-spin" style={{ color: BRAND.accent }} /> : <ImageIcon className="h-5 w-5" />}
+                    <span className="text-xs font-medium flex items-center gap-1"><Upload className="h-3 w-3" /> رفع صورة</span>
+                  </button>
+                )}
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e.target.files)} />
               </div>
 
               {/* Colors */}

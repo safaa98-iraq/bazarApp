@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, Users, Store, ShoppingCart, BarChart2, ClipboardList, LogOut, Shield, Sparkles, Code2, Globe, Gift, CreditCard, Activity, CalendarCheck,
+  LayoutDashboard, Users, Store, ShoppingCart, BarChart2, ClipboardList, LogOut, Shield, Sparkles, Code2, Globe, Gift, CreditCard, Activity, CalendarCheck, ShoppingBag, Newspaper, AlertTriangle, GitCompare,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/auth.store';
 import { NotificationBell } from './NotificationBell';
 
-const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#E8BCB9' };
+const B = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', soft: '#FBE1EA' };
 
 const links = [
   { href: '/admin', label: 'لوحة التحكم', icon: LayoutDashboard, exact: true },
@@ -17,6 +17,9 @@ const links = [
   { href: '/admin/orders', label: 'الطلبات', icon: ShoppingCart },
   { href: '/admin/analytics', label: 'التحليلات', icon: BarChart2 },
   { href: '/admin/merchant-analytics', label: 'تتبع التجار', icon: Activity },
+  { href: '/admin/store-comparison', label: 'مقارنة المتاجر', icon: GitCompare },
+  { href: '/admin/merchant-issues', label: 'تجار بحاجة متابعة', icon: AlertTriangle },
+  { href: '/admin/articles', label: 'المقالات', icon: Newspaper },
   { href: '/admin/logs', label: 'سجل المراقبة', icon: ClipboardList },
   { href: '/admin/ai', label: 'الذكاء الاصطناعي', icon: Sparkles },
   { href: '/admin/widget', label: 'إعدادات الويدجت', icon: Code2 },
@@ -42,7 +45,7 @@ export function AdminSidebar() {
       <div style={{ padding: '20px 24px 16px', borderBottom: `1px solid rgba(255,255,255,.1)` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 32, height: 32, background: B.a, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🛍</div>
+            <div style={{ width: 32, height: 32, background: B.a, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ShoppingBag size={16} color="#fff" /></div>
             <span style={{ fontSize: 17, fontWeight: 800, color: '#fff' }}>StoreBuilder</span>
           </div>
           <NotificationBell variant="dark" />
@@ -83,7 +86,7 @@ export function AdminSidebar() {
         </div>
         <button
           onClick={handleLogout}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: '#F87171', fontSize: 13, fontFamily: 'inherit', transition: 'background .15s' }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, background: 'transparent', border: 'none', cursor: 'pointer', color: '#F87171', fontSize: 13, fontFamily: 'inherit', transition: 'background .15s' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.15)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >

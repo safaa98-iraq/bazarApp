@@ -9,7 +9,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
 } from 'recharts';
 
-const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#E8BCB9' };
+const B = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', soft: '#FBE1EA' };
 
 interface CostData {
   totalRequests: number;
@@ -48,7 +48,10 @@ const featureLabels: Record<string, string> = {
   'generate-seo': 'توليد SEO',
 };
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function AdminAIPage() {
+  useDocumentTitle('تكلفة الذكاء الاصطناعي');
   const [costData, setCostData] = useState<CostData | null>(null);
   const [usageData, setUsageData] = useState<UsageResponse | null>(null);
   const [loadingCost, setLoadingCost] = useState(true);
@@ -100,7 +103,7 @@ export default function AdminAIPage() {
   return (
     <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: '#EDE8F5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 44, height: 44, borderRadius: 10, background: '#F0E7F8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Sparkles size={22} color={B.s} />
         </div>
         <div>
@@ -112,12 +115,12 @@ export default function AdminAIPage() {
       {/* Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'إجمالي الطلبات', value: costData?.totalRequests ?? '—', icon: <Zap size={20} color={B.s} />, bg: '#EDE8F5' },
-          { label: 'إجمالي التوكنز', value: costData?.totalTokens?.toLocaleString() ?? '—', icon: <BarChart2 size={20} color="#2563EB" />, bg: '#DBEAFE' },
+          { label: 'إجمالي الطلبات', value: costData?.totalRequests ?? '—', icon: <Zap size={20} color={B.s} />, bg: '#F0E7F8' },
+          { label: 'إجمالي التوكنز', value: costData?.totalTokens?.toLocaleString('en') ?? '—', icon: <BarChart2 size={20} color="#2563EB" />, bg: '#DBEAFE' },
           { label: 'إجمالي التكلفة', value: totalCostFormatted, icon: <DollarSign size={20} color="#059669" />, bg: '#D1FAE5' },
           { label: 'متوسط لكل طلب', value: costData && costData.totalRequests > 0 ? `$${(costData.totalCost / costData.totalRequests).toFixed(5)}` : '—', icon: <Sparkles size={20} color={B.a} />, bg: '#FCE7EC' },
         ].map(({ label, value, icon, bg }) => (
-          <div key={label} style={{ background: '#fff', borderRadius: 14, border: '1px solid #E8E0F0', padding: '16px 20px' }}>
+          <div key={label} style={{ background: '#fff', borderRadius: 10, border: '1px solid #ECE6F0', padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <p style={{ fontSize: 12, color: '#6B7280', margin: 0 }}>{label}</p>
@@ -130,10 +133,10 @@ export default function AdminAIPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#EDE8F5', padding: 4, borderRadius: 12, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#F0E7F8', padding: 4, borderRadius: 10, width: 'fit-content' }}>
         {TABS.map(({ key, label }) => (
           <button key={key} onClick={() => setActiveTab(key)}
-            style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', background: activeTab === key ? '#fff' : 'transparent', color: activeTab === key ? B.p : '#6B7280', boxShadow: activeTab === key ? '0 1px 4px rgba(0,0,0,.1)' : 'none' }}>
+            style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s', background: activeTab === key ? '#fff' : 'transparent', color: activeTab === key ? B.p : '#6B7280', boxShadow: activeTab === key ? '0 1px 4px rgba(0,0,0,.1)' : 'none' }}>
             {label}
           </button>
         ))}
@@ -146,11 +149,11 @@ export default function AdminAIPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160 }}><Loader2 size={24} color={B.s} style={{ animation: 'spin 1s linear infinite' }} /></div>
           ) : (
             <>
-              <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8E0F0', padding: 24 }}>
+              <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #ECE6F0', padding: 24 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: B.p, marginBottom: 16 }}>التكلفة اليومية — آخر 7 أيام</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={costData?.dailyCost ?? []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F0F8" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F5EFFA" />
                     <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v.toFixed(3)}`} />
                     <Tooltip formatter={(v: number) => [`$${v.toFixed(5)}`, 'تكلفة']} />
@@ -159,11 +162,11 @@ export default function AdminAIPage() {
                 </ResponsiveContainer>
               </div>
 
-              <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8E0F0', padding: 24 }}>
+              <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #ECE6F0', padding: 24 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: B.p, marginBottom: 16 }}>الاستخدام حسب الميزة</h3>
                 <ResponsiveContainer width="100%" height={180}>
                   <BarChart data={costData?.byFeature.map(f => ({ ...f, label: featureLabels[f.feature] ?? f.feature })) ?? []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F0F8" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F5EFFA" />
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} />
                     <Tooltip />
@@ -172,7 +175,7 @@ export default function AdminAIPage() {
                 </ResponsiveContainer>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginTop: 16 }}>
                   {costData?.byFeature.map((f) => (
-                    <div key={f.feature} style={{ background: '#F9F7FC', borderRadius: 10, padding: 12 }}>
+                    <div key={f.feature} style={{ background: '#F5EFFA', borderRadius: 10, padding: 12 }}>
                       <p style={{ fontSize: 12, fontWeight: 600, color: B.p, margin: 0 }}>{featureLabels[f.feature] ?? f.feature}</p>
                       <p style={{ fontSize: 18, fontWeight: 800, color: B.p, margin: '4px 0 0' }}>{f.requests}</p>
                       <p style={{ fontSize: 11, color: '#9CA3AF', margin: 0 }}>${f.cost.toFixed(5)}</p>
@@ -187,13 +190,13 @@ export default function AdminAIPage() {
 
       {/* Usage Logs */}
       {activeTab === 'usage' && (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8E0F0', overflow: 'hidden' }}>
+        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #ECE6F0', overflow: 'hidden' }}>
           {loadingUsage ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160 }}><Loader2 size={24} color={B.s} style={{ animation: 'spin 1s linear infinite' }} /></div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#F9F7FC', borderBottom: '1px solid #E8E0F0' }}>
+                <tr style={{ background: '#F5EFFA', borderBottom: '1px solid #ECE6F0' }}>
                   {['التاجر', 'الميزة', 'التوكنز', 'التكلفة', 'التاريخ'].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: B.p, fontSize: 12 }}>{h}</th>
                   ))}
@@ -203,17 +206,17 @@ export default function AdminAIPage() {
                 {usageData?.data?.length === 0 ? (
                   <tr><td colSpan={5} style={{ padding: '40px 16px', textAlign: 'center', color: '#9CA3AF' }}>لا يوجد استخدام للذكاء الاصطناعي بعد</td></tr>
                 ) : usageData?.data?.map((log, idx) => (
-                  <tr key={log.id} style={{ borderTop: '1px solid #F3F0F8', background: idx % 2 === 0 ? '#fff' : '#FDFCFE' }}>
+                  <tr key={log.id} style={{ borderTop: '1px solid #F5EFFA', background: idx % 2 === 0 ? '#fff' : '#FDFCFE' }}>
                     <td style={{ padding: '12px 16px' }}>
                       <p style={{ fontWeight: 600, color: B.p, margin: 0 }}>{log.merchant.name}</p>
                       <p style={{ fontSize: 11, color: '#9CA3AF', margin: 0 }}>{log.merchant.email}</p>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: '#EDE8F5', color: B.s }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 10, background: '#F0E7F8', color: B.s }}>
                         {featureLabels[log.feature] ?? log.feature}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px', color: '#6B7280' }}>{log.tokensUsed.toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', color: '#6B7280' }}>{log.tokensUsed.toLocaleString('en')}</td>
                     <td style={{ padding: '12px 16px', color: '#6B7280' }}>${Number(log.cost).toFixed(5)}</td>
                     <td style={{ padding: '12px 16px', color: '#9CA3AF', fontSize: 11 }}>{formatDateTime(log.createdAt)}</td>
                   </tr>
@@ -227,16 +230,16 @@ export default function AdminAIPage() {
       {/* Merchant Limits */}
       {activeTab === 'limits' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: '#854D0E' }}>
+          <div style={{ background: '#FEF9C3', border: '1px solid #FDE68A', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: '#854D0E' }}>
             حدد عدد طلبات الذكاء الاصطناعي اليومية لكل تاجر. الحد الافتراضي هو 50 طلب/يوم. التغييرات تسري فوراً.
           </div>
           {loadingUsage ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160 }}><Loader2 size={24} color={B.s} style={{ animation: 'spin 1s linear infinite' }} /></div>
           ) : (
-            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8E0F0', overflow: 'hidden' }}>
+            <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #ECE6F0', overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#F9F7FC', borderBottom: '1px solid #E8E0F0' }}>
+                  <tr style={{ background: '#F5EFFA', borderBottom: '1px solid #ECE6F0' }}>
                     {['التاجر', 'الطلبات', 'التوكنز', 'التكلفة', 'الحد اليومي', ''].map(h => (
                       <th key={h} style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: B.p, fontSize: 12 }}>{h}</th>
                     ))}
@@ -246,10 +249,10 @@ export default function AdminAIPage() {
                   {usageData?.merchantStats?.length === 0 ? (
                     <tr><td colSpan={6} style={{ padding: '40px 16px', textAlign: 'center', color: '#9CA3AF' }}>لا يوجد استخدام مسجّل</td></tr>
                   ) : usageData?.merchantStats?.map((stat, idx) => (
-                    <tr key={stat.merchantId} style={{ borderTop: '1px solid #F3F0F8', background: idx % 2 === 0 ? '#fff' : '#FDFCFE' }}>
+                    <tr key={stat.merchantId} style={{ borderTop: '1px solid #F5EFFA', background: idx % 2 === 0 ? '#fff' : '#FDFCFE' }}>
                       <td style={{ padding: '12px 16px', fontWeight: 600, color: B.p, fontFamily: 'monospace', fontSize: 12 }}>{stat.merchantId.slice(-8)}</td>
                       <td style={{ padding: '12px 16px', color: '#6B7280' }}>{stat.totalRequests}</td>
-                      <td style={{ padding: '12px 16px', color: '#6B7280' }}>{stat.totalTokens.toLocaleString()}</td>
+                      <td style={{ padding: '12px 16px', color: '#6B7280' }}>{stat.totalTokens.toLocaleString('en')}</td>
                       <td style={{ padding: '12px 16px', color: '#6B7280' }}>${stat.totalCost.toFixed(5)}</td>
                       <td style={{ padding: '12px 16px' }}>
                         <input
@@ -259,14 +262,14 @@ export default function AdminAIPage() {
                           placeholder="50"
                           value={limitInputs[stat.merchantId] ?? ''}
                           onChange={e => setLimitInputs(p => ({ ...p, [stat.merchantId]: e.target.value }))}
-                          style={{ width: 80, padding: '5px 8px', border: '1.5px solid #E8E0F0', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+                          style={{ width: 80, padding: '5px 8px', border: '1.5px solid #ECE6F0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
                         />
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'left' }}>
                         <button
                           onClick={() => saveLimit(stat.merchantId, limitInputs[stat.merchantId] ?? '')}
                           disabled={savingLimits[stat.merchantId] || !limitInputs[stat.merchantId]}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: B.a, color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (savingLimits[stat.merchantId] || !limitInputs[stat.merchantId]) ? 0.5 : 1 }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: B.a, color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (savingLimits[stat.merchantId] || !limitInputs[stat.merchantId]) ? 0.5 : 1 }}
                         >
                           {savingLimits[stat.merchantId] ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={12} />}
                           حفظ

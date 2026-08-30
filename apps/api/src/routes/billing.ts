@@ -185,15 +185,44 @@ router.patch('/admin/requests/:id', verifyToken, requireRole('SUPER_ADMIN'), asy
       await notifyUser(
         payReq.userId,
         'PLAN_APPROVED',
-        `🎉 تمت الموافقة على خطتك!`,
+        'تمت الموافقة على خطتك!',
         `تم تفعيل خطة ${PLAN_NAMES[payReq.planTarget as PlanKey]} بنجاح — استمتع بالمزايا الجديدة`,
         { plan: payReq.planTarget, planAr: PLAN_NAMES[payReq.planTarget as PlanKey], features: PLAN_FEATURES[payReq.planTarget as PlanKey] ?? [] },
       );
+
+      // Referral reward: after a referred merchant's 2nd approved paid payment,
+      // grant their referrer one free month (once per referral).
+      const referredUser = await prisma.user.findUnique({
+        where: { id: payReq.userId },
+        select: { referredById: true, referralRewardGiven: true },
+      });
+      if (referredUser?.referredById && !referredUser.referralRewardGiven) {
+        const approvedCount = await prisma.paymentRequest.count({
+          where: { userId: payReq.userId, status: 'APPROVED' },
+        });
+        if (approvedCount >= 2) {
+          await prisma.user.update({
+            where: { id: payReq.userId },
+            data: { referralRewardGiven: true },
+          });
+          await prisma.user.update({
+            where: { id: referredUser.referredById },
+            data: { freeMonthsCredit: { increment: 1 } },
+          });
+          await notifyUser(
+            referredUser.referredById,
+            'REFERRAL_REWARD',
+            'ربحت شهراً مجانياً!',
+            'أحد التجار الذين دعوتهم جدّد اشتراكه للمرة الثانية — أضفنا لك شهراً مجانياً إلى رصيدك.',
+            { freeMonthsCredit: 1 },
+          );
+        }
+      }
     } else {
       await notifyUser(
         payReq.userId,
         'PLAN_REJECTED',
-        `❌ لم يتم تأكيد الدفع`,
+        'لم يتم تأكيد الدفع',
         adminNote ?? 'لم نتمكن من التحقق من عملية الدفع. يرجى التواصل مع الدعم أو المحاولة مجدداً.',
         { plan: payReq.planTarget, adminNote },
       );

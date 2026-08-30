@@ -23,12 +23,12 @@ function UpgradeCard({ hint, minPlan }: { hint: string; minPlan: Plan }) {
           <Lock className="h-5 w-5" style={{ color: '#7C3AED' }} />
         </div>
         <div>
-          <p className="font-bold text-sm mb-1" style={{ color: '#432E54' }}>ميزة {PLAN_LABELS[minPlan]}</p>
+          <p className="font-bold text-sm mb-1" style={{ color: '#2F2E4B' }}>ميزة {PLAN_LABELS[minPlan]}</p>
           <p className="text-xs text-gray-500 leading-relaxed max-w-xs">{hint}</p>
         </div>
         <a href={UPGRADE_HREF}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white transition hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #7C3AED, #AE445A)' }}>
+          style={{ background: 'linear-gradient(135deg, #7C3AED, #DB6E93)' }}>
           <Zap className="h-3.5 w-3.5" />
           ارفع خطتك
         </a>
@@ -46,7 +46,7 @@ function OverlayLock({ hint, minPlan }: { hint: string; minPlan: Plan }) {
         <p className="text-xs font-semibold text-white text-center">{hint}</p>
         <a href={UPGRADE_HREF}
           className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition hover:opacity-90"
-          style={{ background: '#AE445A' }}>
+          style={{ background: '#DB6E93' }}>
           ارفع خطتك
         </a>
       </div>

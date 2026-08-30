@@ -6,40 +6,78 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { useCartStore } from '@/lib/stores/cart.store';
+import { useAuthStore } from '@/lib/stores/auth.store';
 import { toast } from 'sonner';
-import { ShoppingBag, ArrowRight, Truck, CheckCircle2, Loader2 } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Truck, CheckCircle2, Loader2, Package, ShieldCheck, Tag, Gift, CheckCircle, XCircle } from 'lucide-react';
 import Image from 'next/image';
+import { IRAQI_GOVERNORATES, type StoreDeliveryZone } from '@storebuilder/types';
 
-interface StoreInfo { name: string; theme: string; logo?: string; }
+interface StoreInfo { name: string; theme: string; logo?: string; deliveryZones?: StoreDeliveryZone[]; }
 
-const IRAQI_GOVERNORATES = [
-  'بغداد', 'البصرة', 'نينوى', 'أربيل', 'النجف', 'كربلاء', 'السليمانية',
-  'ديالى', 'الأنبار', 'بابل', 'واسط', 'ذي قار', 'المثنى', 'القادسية',
-  'صلاح الدين', 'كركوك', 'ميسان', 'دهوك',
-];
+interface CheckoutPreview {
+  subtotal: number; promoDiscount: number;
+  couponDiscount: number; couponError: string | null;
+  giftCardDeducted: number; giftCardError: string | null;
+  shippingFee: number; total: number;
+}
 
 export default function CheckoutPage() {
   const { slug } = useParams() as { slug: string };
   const router = useRouter();
   const { items, storeId, total, clearCart } = useCartStore();
+  const customerUser = useAuthStore(s => s.user);
+  const isLoggedInCustomer = customerUser?.role === 'CUSTOMER';
   const [store, setStore] = useState<StoreInfo | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
-    customerName: '', customerPhone: '',
+    customerName: customerUser?.role === 'CUSTOMER' ? customerUser.name : '', customerPhone: '',
     governorate: '', city: '', address: '', notes: '',
+    couponCode: '', giftCardCode: '',
   });
   const [errors, setErrors] = useState<Partial<typeof form>>({});
+  const [preview, setPreview] = useState<CheckoutPreview | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     api.get<{ success: boolean; data: StoreInfo }>(`/api/storefront/${slug}`, { noAuth: true })
       .then(r => setStore(r.data)).catch(() => null);
   }, [slug]);
 
-  const theme = store?.theme ?? '#432E54';
+  useEffect(() => {
+    if (store?.name) document.title = `إتمام الطلب — ${store.name}`;
+  }, [store?.name]);
+
+  const theme = store?.theme ?? '#2F2E4B';
+  const zones = store?.deliveryZones ?? [];
+  const deliverableGovernorates = zones.length > 0 ? zones.map(z => z.governorate) : IRAQI_GOVERNORATES;
+  const shippingFee = zones.find(z => z.governorate === form.governorate)?.price ?? 0;
+  const grandTotal = total() + shippingFee;
+
+  // Live subtotal/discount/total preview — recomputed on the server whenever the cart,
+  // coupon code, gift card code, or shipping fee changes, so the customer always sees the real total before submitting.
+  useEffect(() => {
+    if (items.length === 0) return;
+    setPreviewLoading(true);
+    const t = setTimeout(() => {
+      api.post<{ success: boolean; data: CheckoutPreview }>(`/api/storefront/${slug}/checkout/preview`, {
+        items: items.map(i => ({ productId: i.product.id, quantity: i.quantity, variantId: i.variantId ?? undefined })),
+        shippingFee,
+        couponCode: form.couponCode || undefined,
+        giftCardCode: form.giftCardCode || undefined,
+      }, { noAuth: true })
+        .then(r => setPreview(r.data))
+        .catch(() => setPreview(null))
+        .finally(() => setPreviewLoading(false));
+    }, 500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, items, shippingFee, form.couponCode, form.giftCardCode]);
+
+  const displayTotal = preview?.total ?? grandTotal;
 
   if (items.length === 0) return (
-    <div className="min-h-screen flex items-center justify-center" dir="rtl" style={{ background: '#F5F0FA' }}>
+    <div className="min-h-screen flex items-center justify-center" dir="rtl" style={{ background: '#F5EFFA' }}>
       <div className="text-center">
         <ShoppingBag className="h-12 w-12 mx-auto mb-3 text-gray-300" />
         <p className="text-gray-500">سلتك فارغة</p>
@@ -72,9 +110,9 @@ export default function CheckoutPage() {
         `/api/storefront/${slug}/checkout`,
         {
           ...form,
-          items: items.map(i => ({ productId: i.product.id, quantity: i.quantity })),
+          items: items.map(i => ({ productId: i.product.id, quantity: i.quantity, variantId: i.variantId ?? undefined })),
         },
-        { noAuth: true }
+        { noAuth: !isLoggedInCustomer }
       );
       clearCart();
       router.push(`/store/${slug}/order-confirmation?orderId=${res.data.id}`);
@@ -86,7 +124,7 @@ export default function CheckoutPage() {
   };
 
   const inputClass = (field: keyof typeof form) =>
-    `w-full px-4 py-3 rounded-xl border text-sm focus:outline-none transition ${errors[field] ? 'border-red-400 bg-red-50' : 'border-[#E8E0F0] focus:border-[#AE445A]'}`;
+    `w-full px-4 py-3 rounded-xl border text-sm focus:outline-none transition ${errors[field] ? 'border-red-400 bg-red-50' : 'border-[#ECE6F0] focus:border-[#DB6E93]'}`;
 
   return (
     <div className="min-h-screen" dir="rtl" style={{ background: '#F7F5FC' }}>
@@ -147,9 +185,13 @@ export default function CheckoutPage() {
                     <select value={form.governorate} onChange={set('governorate')}
                       className={inputClass('governorate') + ' cursor-pointer'}>
                       <option value="">اختر المحافظة</option>
-                      {IRAQI_GOVERNORATES.map(g => <option key={g} value={g}>{g}</option>)}
+                      {deliverableGovernorates.map(g => {
+                        const zone = zones.find(z => z.governorate === g);
+                        return <option key={g} value={g}>{g}{zone ? ` — ${formatCurrency(zone.price)}` : ''}</option>;
+                      })}
                     </select>
                     {errors.governorate && <p className="text-red-500 text-xs mt-1">{errors.governorate}</p>}
+                    {zones.length === 0 && <p className="text-xs text-gray-400 mt-1">التوصيل متاح لجميع المحافظات بدون رسوم إضافية حالياً</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">المدينة / الحي *</label>
@@ -168,7 +210,7 @@ export default function CheckoutPage() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">ملاحظات (اختياري)</label>
                   <textarea value={form.notes} onChange={set('notes')} rows={2}
                     placeholder="أي تعليمات خاصة للتوصيل…"
-                    className="w-full px-4 py-3 rounded-xl border border-[#E8E0F0] text-sm focus:outline-none focus:border-[#AE445A] transition resize-none" />
+                    className="w-full px-4 py-3 rounded-xl border border-[#ECE6F0] text-sm focus:outline-none focus:border-[#DB6E93] transition resize-none" />
                 </div>
               </div>
 
@@ -196,14 +238,14 @@ export default function CheckoutPage() {
               <div className="space-y-3 mb-4">
                 {items.map(item => (
                   <div key={item.id} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0" style={{ background: '#F5F0FA' }}>
+                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0" style={{ background: '#F5EFFA' }}>
                       {item.product.images?.[0]
                         ? <Image src={item.product.images[0]} alt={item.product.name} width={40} height={40} className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center text-sm">📦</div>}
+                        : <div className="w-full h-full flex items-center justify-center text-gray-300"><Package size={16} /></div>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-gray-700 truncate">{item.product.name}</p>
-                      <p className="text-xs text-gray-400">× {item.quantity}</p>
+                      <p className="text-xs text-gray-400">{item.variantLabel ? `${item.variantLabel} · ` : ''}× {item.quantity}</p>
                     </div>
                     <p className="text-sm font-semibold text-gray-900 flex-shrink-0">
                       {formatCurrency(item.product.price * item.quantity)}
@@ -212,23 +254,86 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <div className="border-t pt-4 mb-5" style={{ borderColor: '#E8E0F0' }}>
-                <div className="flex justify-between font-bold text-base">
-                  <span className="text-gray-700">المجموع الكلي</span>
-                  <span style={{ color: theme }}>{formatCurrency(total())}</span>
+              <div className="border-t pt-4 mb-4 space-y-2.5" style={{ borderColor: '#ECE6F0' }}>
+                <div>
+                  <div className="relative">
+                    <Tag className="h-3.5 w-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input value={form.couponCode} onChange={set('couponCode')} placeholder="كود الخصم (اختياري)"
+                      className="w-full pr-8 pl-3 py-2 rounded-lg border text-xs focus:outline-none focus:border-[#DB6E93] transition"
+                      style={{ borderColor: '#ECE6F0' }} />
+                  </div>
+                  {form.couponCode && preview && (
+                    preview.couponError
+                      ? <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><XCircle className="h-3 w-3" /> {preview.couponError}</p>
+                      : preview.couponDiscount > 0
+                        ? <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> تم تطبيق خصم {formatCurrency(preview.couponDiscount)}</p>
+                        : null
+                  )}
                 </div>
-                <p className="text-xs text-gray-400 mt-1">+ رسوم التوصيل (تحدد لاحقاً)</p>
+                <div>
+                  <div className="relative">
+                    <Gift className="h-3.5 w-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input value={form.giftCardCode} onChange={set('giftCardCode')} placeholder="كود بطاقة الهدايا (اختياري)"
+                      className="w-full pr-8 pl-3 py-2 rounded-lg border text-xs focus:outline-none focus:border-[#DB6E93] transition"
+                      style={{ borderColor: '#ECE6F0' }} dir="ltr" />
+                  </div>
+                  {form.giftCardCode && preview && (
+                    preview.giftCardError
+                      ? <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><XCircle className="h-3 w-3" /> {preview.giftCardError}</p>
+                      : preview.giftCardDeducted > 0
+                        ? <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> تم خصم {formatCurrency(preview.giftCardDeducted)} من رصيد البطاقة</p>
+                        : null
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mb-5 space-y-2" style={{ borderColor: '#ECE6F0' }}>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">المجموع الفرعي</span>
+                  <span className="text-gray-700">{formatCurrency(preview?.subtotal ?? total())}</span>
+                </div>
+                {!!preview?.promoDiscount && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">خصم تلقائي (عرض)</span>
+                    <span className="text-emerald-600">− {formatCurrency(preview.promoDiscount)}</span>
+                  </div>
+                )}
+                {!!preview?.couponDiscount && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">كود الخصم</span>
+                    <span className="text-emerald-600">− {formatCurrency(preview.couponDiscount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">رسوم التوصيل</span>
+                  <span className="text-gray-700">
+                    {form.governorate ? formatCurrency(shippingFee) : 'اختر المحافظة'}
+                  </span>
+                </div>
+                {!!preview?.giftCardDeducted && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">بطاقة الهدايا</span>
+                    <span className="text-emerald-600">− {formatCurrency(preview.giftCardDeducted)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-base pt-2 border-t items-center" style={{ borderColor: '#ECE6F0' }}>
+                  <span className="text-gray-700">المجموع الكلي</span>
+                  <span style={{ color: theme }} className="flex items-center gap-1.5">
+                    {previewLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    {formatCurrency(displayTotal)}
+                  </span>
+                </div>
               </div>
 
               <button type="submit" disabled={submitting}
                 className="w-full py-3.5 font-bold text-white rounded-2xl transition hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
-                style={{ background: `linear-gradient(135deg, ${theme}, #AE445A)` }}>
+                style={{ background: `linear-gradient(135deg, ${theme}, #DB6E93)` }}>
                 {submitting
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> جارٍ تأكيد الطلب…</>
                   : '✓ تأكيد الطلب'}
               </button>
 
-              <p className="text-center text-xs text-gray-400 mt-3">🛡️ بياناتك محمية ومشفرة</p>
+              <p className="text-center text-xs text-gray-400 mt-3 flex items-center justify-center gap-1"><ShieldCheck size={12} /> بياناتك محمية ومشفرة</p>
             </div>
           </div>
         </form>

@@ -34,7 +34,7 @@ export const FEATURE_LIMITS: FeatureLimit[] = [
   {
     feature: 'products',
     minPlan: 'FREE',
-    limit: { FREE: 75, PRO: null, ENTERPRISE: null },
+    limit: { FREE: PLAN_CONFIGS.FREE.products, PRO: null, ENTERPRISE: null },
     description: 'عدد المنتجات',
     upgradeHint: 'ارفع خطتك لإضافة منتجات أكثر',
   },
@@ -61,9 +61,29 @@ export const FEATURE_LIMITS: FeatureLimit[] = [
   {
     feature: 'coupons',
     minPlan: 'PRO',
-    limit: { FREE: 2, PRO: null, ENTERPRISE: null },
+    limit: { FREE: PLAN_CONFIGS.FREE.maxCoupons, PRO: PLAN_CONFIGS.PRO.maxCoupons, ENTERPRISE: PLAN_CONFIGS.ENTERPRISE.maxCoupons },
     description: 'كوبونات الخصم',
-    upgradeHint: 'ارفع إلى الخطة الاحترافية لكوبونات غير محدودة',
+    upgradeHint: 'ارفع إلى الخطة الاحترافية لإضافة كود خصم',
+  },
+  {
+    feature: 'brands',
+    minPlan: 'PRO',
+    limit: { FREE: PLAN_CONFIGS.FREE.maxBrands, PRO: PLAN_CONFIGS.PRO.maxBrands, ENTERPRISE: PLAN_CONFIGS.ENTERPRISE.maxBrands === -1 ? null : PLAN_CONFIGS.ENTERPRISE.maxBrands },
+    description: 'الماركات التجارية',
+    upgradeHint: 'ارفع إلى الخطة الاحترافية لإضافة ماركات',
+  },
+  {
+    feature: 'banners',
+    minPlan: 'FREE',
+    limit: { FREE: PLAN_CONFIGS.FREE.maxBanners, PRO: PLAN_CONFIGS.PRO.maxBanners, ENTERPRISE: PLAN_CONFIGS.ENTERPRISE.maxBanners === -1 ? null : PLAN_CONFIGS.ENTERPRISE.maxBanners },
+    description: 'البانرات الإعلانية',
+    upgradeHint: 'ارفع خطتك لإضافة بانرات أكثر',
+  },
+  {
+    feature: 'product_comments',
+    minPlan: 'ENTERPRISE',
+    description: 'التعليق على المنتجات',
+    upgradeHint: 'ارفع إلى خطة الأعمال للسماح بالتعليقات على المنتجات',
   },
   {
     feature: 'chat',

@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, Rocket } from 'lucide-react';
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, Rocket, Store, Image as ImageIcon, Package, Tag, Lightbulb, type LucideIcon } from 'lucide-react';
 
-const B = { p: '#432E54', a: '#AE445A', border: '#E8BCB9', bg: '#FFF0EB', soft: '#F5F0FA' };
+const B = { p: '#2F2E4B', a: '#DB6E93', border: '#FBE1EA', bg: '#FBF9F2', soft: '#F5EFFA' };
 
 interface OnboardingStatus {
   store: boolean;
@@ -15,10 +15,18 @@ interface OnboardingStatus {
   published: boolean;
 }
 
-const STEPS = [
+const STEPS: {
+  key: keyof OnboardingStatus;
+  Icon: LucideIcon;
+  title: string;
+  desc: string;
+  href: string;
+  cta: string;
+  tip: string;
+}[] = [
   {
-    key: 'store' as const,
-    emoji: '🏪',
+    key: 'store',
+    Icon: Store,
     title: 'سمّي متجرك',
     desc: 'اختر اسماً مميزاً يعبّر عن متجرك',
     href: '/dashboard/settings',
@@ -26,8 +34,8 @@ const STEPS = [
     tip: 'الاسم الجيد قصير وسهل التذكر',
   },
   {
-    key: 'logo' as const,
-    emoji: '🖼️',
+    key: 'logo',
+    Icon: ImageIcon,
     title: 'أضف شعاراً',
     desc: 'الشعار يجعل متجرك يبدو احترافياً',
     href: '/dashboard/settings',
@@ -35,8 +43,8 @@ const STEPS = [
     tip: 'صورة مربعة بدقة 512×512 أو أكثر',
   },
   {
-    key: 'product' as const,
-    emoji: '📦',
+    key: 'product',
+    Icon: Package,
     title: 'أضف أول منتج',
     desc: 'أضف منتجاً واحداً على الأقل لبدء البيع',
     href: '/dashboard/products',
@@ -44,8 +52,8 @@ const STEPS = [
     tip: 'أضف صورة واضحة وسعراً دقيقاً',
   },
   {
-    key: 'category' as const,
-    emoji: '🏷️',
+    key: 'category',
+    Icon: Tag,
     title: 'أنشئ تصنيفاً',
     desc: 'التصنيفات تساعد الزبائن على التصفح',
     href: '/dashboard/categories',
@@ -53,8 +61,8 @@ const STEPS = [
     tip: 'مثال: فساتين، بلوزات، إكسسوارات',
   },
   {
-    key: 'published' as const,
-    emoji: '🚀',
+    key: 'published',
+    Icon: Rocket,
     title: 'انشر متجرك',
     desc: 'اجعل متجرك مرئياً للزبائن',
     href: '/dashboard/settings',
@@ -98,14 +106,14 @@ export function OnboardingChecklist() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <p className="font-bold text-sm" style={{ color: B.p }}>
-              {completed === 0 ? 'ابدأ ببناء متجرك 🎉' : `أكملت ${completed} من ${total} خطوات`}
+              {completed === 0 ? 'ابدأ ببناء متجرك' : `أكملت ${completed} من ${total} خطوات`}
             </p>
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
               style={{ background: `${B.a}15`, color: B.a }}>
               {pct}%
             </span>
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#E8E0F0' }}>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#ECE6F0' }}>
             <div className="h-full rounded-full transition-all duration-500"
               style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${B.p}, ${B.a})` }} />
           </div>
@@ -134,7 +142,7 @@ export function OnboardingChecklist() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">{step.emoji}</span>
+                    <step.Icon className="h-4 w-4" style={{ color: isNext ? B.a : B.p }} />
                     <p className={`text-sm font-semibold ${done ? 'line-through text-gray-400' : ''}`}
                       style={done ? undefined : { color: B.p }}>
                       {step.title}
@@ -149,7 +157,7 @@ export function OnboardingChecklist() {
                   )}
                   {isNext && (
                     <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#6B7280' }}>
-                      <span>💡</span> {step.tip}
+                      <Lightbulb className="h-3 w-3" /> {step.tip}
                     </p>
                   )}
                 </div>

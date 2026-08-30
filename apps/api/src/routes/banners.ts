@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { verifyToken, requireRole } from '../middleware/auth';
 import prisma from '@storebuilder/database';
+import { PLAN_CONFIGS, type PlanKey } from '@storebuilder/types';
 
 const router = Router();
 
@@ -26,6 +27,17 @@ router.post('/', verifyToken, requireRole('MERCHANT'), async (req: Request, res:
   try {
     const store = await getStore(req.user!.userId);
     if (!store) { res.status(404).json({ success: false, error: 'Store not found' }); return; }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { plan: true } });
+    const maxBanners = PLAN_CONFIGS[(user?.plan as PlanKey) ?? 'FREE'].maxBanners;
+    if (maxBanners !== -1) {
+      const count = await prisma.storeBanner.count({ where: { storeId: store.id } });
+      if (count >= maxBanners) {
+        res.status(403).json({ success: false, error: `خطتك الحالية تسمح بـ ${maxBanners} بانر كحد أقصى. ارفع خطتك لإضافة المزيد.` });
+        return;
+      }
+    }
+
     const { title, subtitle, imageUrl, linkUrl, bgColor = '#432E54', textColor = '#ffffff', sortOrder = 0 } = req.body;
     if (!title) { res.status(400).json({ success: false, error: 'title required' }); return; }
     const banner = await prisma.storeBanner.create({

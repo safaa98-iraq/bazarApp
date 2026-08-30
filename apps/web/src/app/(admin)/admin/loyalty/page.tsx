@@ -27,7 +27,10 @@ const TIER_COLORS = {
 
 type Tab = 'overview' | 'rules' | 'accounts' | 'bonus';
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function AdminLoyaltyPage() {
+  useDocumentTitle('برنامج الولاء');
   const [tab, setTab] = useState<Tab>('overview');
   const [analytics, setAnalytics] = useState<LoyaltyAnalytics | null>(null);
   const [rules, setRules] = useState<Rule[]>([]);
@@ -111,15 +114,15 @@ export default function AdminLoyaltyPage() {
   return (
     <div style={{ padding: 32 }} dir="rtl">
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#432E54', margin: 0 }}>برنامج الولاء</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#2F2E4B', margin: 0 }}>برنامج الولاء</h1>
         <p style={{ fontSize: 13, color: '#6B7280', margin: '4px 0 0' }}>إدارة نقاط الولاء والمستويات والمكافآت</p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #E8E0F0' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid #ECE6F0' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', fontSize: 13, fontWeight: 600, border: 'none', borderBottom: tab === t.key ? '2px solid #AE445A' : '2px solid transparent', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1, color: tab === t.key ? '#AE445A' : '#6B7280', transition: 'all .15s' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', fontSize: 13, fontWeight: 600, border: 'none', borderBottom: tab === t.key ? '2px solid #DB6E93' : '2px solid transparent', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', marginBottom: -1, color: tab === t.key ? '#DB6E93' : '#6B7280', transition: 'all .15s' }}>
             <t.icon size={15} />
             {t.label}
           </button>
@@ -131,10 +134,10 @@ export default function AdminLoyaltyPage() {
         <div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {[
-              { label: 'إجمالي الحسابات', value: analytics.totalAccounts, fmt: (v: number) => v.toLocaleString() },
-              { label: 'نقاط قائمة', value: analytics.totalPointsOutstanding, fmt: (v: number) => v.toLocaleString() },
-              { label: 'نقاط مكتسبة', value: analytics.totalEarned, fmt: (v: number) => v.toLocaleString() },
-              { label: 'نقاط مستبدلة', value: analytics.totalRedeemed, fmt: (v: number) => v.toLocaleString() },
+              { label: 'إجمالي الحسابات', value: analytics.totalAccounts, fmt: (v: number) => v.toLocaleString('en') },
+              { label: 'نقاط قائمة', value: analytics.totalPointsOutstanding, fmt: (v: number) => v.toLocaleString('en') },
+              { label: 'نقاط مكتسبة', value: analytics.totalEarned, fmt: (v: number) => v.toLocaleString('en') },
+              { label: 'نقاط مستبدلة', value: analytics.totalRedeemed, fmt: (v: number) => v.toLocaleString('en') },
             ].map(card => (
               <div key={card.label} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <p className="text-xs text-gray-500 mb-1">{card.label}</p>
@@ -229,7 +232,7 @@ export default function AdminLoyaltyPage() {
                   type="number" placeholder="اختياري" className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 outline-none" />
               </div>
             </div>
-            <button onClick={createRule} className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: '#432E54' }}>
+            <button onClick={createRule} className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: '#2F2E4B' }}>
               إضافة قاعدة
             </button>
           </div>
@@ -263,14 +266,14 @@ export default function AdminLoyaltyPage() {
                   {accounts.map(a => (
                     <tr key={a.id}>
                       <td className="px-4 py-3 font-medium">{a.customerEmail}</td>
-                      <td className="px-4 py-3 font-bold" style={{ color: '#432E54' }}>{a.totalPoints.toLocaleString()}</td>
+                      <td className="px-4 py-3 font-bold" style={{ color: '#2F2E4B' }}>{a.totalPoints.toLocaleString('en')}</td>
                       <td className="px-4 py-3">
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full"
                           style={{ color: TIER_COLORS[a.tier as keyof typeof TIER_COLORS], background: TIER_COLORS[a.tier as keyof typeof TIER_COLORS] + '22' }}>
                           {a.tier === 'BRONZE' ? 'برونزي' : a.tier === 'SILVER' ? 'فضي' : a.tier === 'GOLD' ? 'ذهبي' : 'بلاتيني'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-500">{a.lifetimePoints.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-gray-500">{a.lifetimePoints.toLocaleString('en')}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -285,7 +288,7 @@ export default function AdminLoyaltyPage() {
         <div className="max-w-md">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-              <Gift className="h-4 w-4" style={{ color: '#AE445A' }} />
+              <Gift className="h-4 w-4" style={{ color: '#DB6E93' }} />
               منح نقاط مكافأة
             </h3>
             <div className="space-y-3">
@@ -314,7 +317,7 @@ export default function AdminLoyaltyPage() {
               )}
               <button onClick={giveBonus}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold text-white"
-                style={{ background: '#AE445A' }}>
+                style={{ background: '#DB6E93' }}>
                 منح النقاط
               </button>
             </div>

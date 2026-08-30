@@ -9,7 +9,7 @@ import { formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/lib/stores/auth.store';
 import { canUseFeature, getFeatureLimit, Plan } from '@/lib/plan-features';
 
-const BRAND = { primary: '#432E54', secondary: '#4B4376', accent: '#AE445A', light: '#E8BCB9' };
+const BRAND = { primary: '#2F2E4B', secondary: '#4A4767', accent: '#DB6E93', light: '#FBE1EA' };
 
 interface CouponForm {
   code: string; discountType: 'percent' | 'fixed';
@@ -21,7 +21,10 @@ const emptyForm: CouponForm = {
   minOrderAmount: '', maxUses: '', expiresAt: '',
 };
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function CouponsPage() {
+  useDocumentTitle('كوبونات الخصم');
   const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
   const couponLimit = getFeatureLimit(plan, 'coupons');
   const atLimit = couponLimit !== null && couponLimit !== undefined;
@@ -103,7 +106,7 @@ export default function CouponsPage() {
           {coupons.length >= (couponLimit ?? 0) && (
             <a href="/dashboard/settings?tab=billing"
               className="text-xs font-bold px-3 py-1.5 rounded-xl text-white transition hover:opacity-90 flex-shrink-0"
-              style={{ background: '#AE445A' }}>ارفع الآن</a>
+              style={{ background: '#DB6E93' }}>ارفع الآن</a>
           )}
         </div>
       )}
@@ -128,7 +131,7 @@ export default function CouponsPage() {
           { label: 'كوبونات نشطة', value: coupons.filter(c => c.isActive).length, color: '#10b981' },
           { label: 'إجمالي الاستخدامات', value: totalSavings, color: BRAND.accent },
         ].map(stat => (
-          <div key={stat.label} className="bg-white rounded-2xl border p-4" style={{ borderColor: '#E8E0F0' }}>
+          <div key={stat.label} className="bg-white rounded-2xl border p-4" style={{ borderColor: '#ECE6F0' }}>
             <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
             <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
           </div>
@@ -141,7 +144,7 @@ export default function CouponsPage() {
           <Loader2 className="h-6 w-6 animate-spin" style={{ color: BRAND.accent }} />
         </div>
       ) : coupons.length === 0 ? (
-        <div className="bg-white rounded-2xl border p-16 text-center" style={{ borderColor: '#E8E0F0' }}>
+        <div className="bg-white rounded-2xl border p-16 text-center" style={{ borderColor: '#ECE6F0' }}>
           <Tag className="h-12 w-12 mx-auto mb-4 text-gray-200" />
           <p className="font-medium text-gray-400 mb-1">لا توجد كوبونات بعد</p>
           <p className="text-sm text-gray-400 mb-6">أنشئ كوبون خصم لتشجيع العملاء على الشراء</p>
@@ -152,16 +155,16 @@ export default function CouponsPage() {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#E8E0F0' }}>
+        <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#ECE6F0' }}>
           <table className="w-full text-sm">
-            <thead className="border-b" style={{ background: '#F5F0FA' }}>
+            <thead className="border-b" style={{ background: '#F5EFFA' }}>
               <tr>
                 {['الكود', 'الخصم', 'الحد الأدنى', 'الاستخدام', 'الانتهاء', 'الحالة', 'إجراءات'].map(h => (
                   <th key={h} className="px-4 py-3 text-right font-semibold" style={{ color: BRAND.primary }}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F5F0FA]">
+            <tbody className="divide-y divide-[#F5EFFA]">
               {coupons.map(c => {
                 const isExpired = c.expiresAt && new Date(c.expiresAt) < new Date();
                 const isExhausted = c.maxUses && c.usedCount >= c.maxUses;
@@ -200,7 +203,7 @@ export default function CouponsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${c.isActive && !isExpired && !isExhausted ? 'text-emerald-700' : 'text-gray-500'}`}
-                        style={{ background: c.isActive && !isExpired && !isExhausted ? '#d1fae5' : '#F5F0FA' }}>
+                        style={{ background: c.isActive && !isExpired && !isExhausted ? '#d1fae5' : '#F5EFFA' }}>
                         {isExpired ? 'منتهي' : isExhausted ? 'مستنفد' : c.isActive ? 'نشط' : 'موقوف'}
                       </span>
                     </td>
@@ -228,7 +231,7 @@ export default function CouponsPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" dir="rtl">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8E0F0]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#ECE6F0]">
               <h2 className="text-lg font-bold" style={{ color: BRAND.primary }}>إنشاء كوبون خصم</h2>
               <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg hover:bg-gray-100 transition text-gray-400">
                 <X className="h-5 w-5" />
@@ -243,7 +246,7 @@ export default function CouponsPage() {
                   <input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} required
                     placeholder="مثال: SAVE20"
                     className="flex-1 px-3 py-2.5 rounded-xl border text-sm font-bold uppercase focus:outline-none focus:ring-2 transition tracking-widest"
-                    style={{ borderColor: '#E8E0F0', color: BRAND.primary, fontFamily: 'monospace' }} />
+                    style={{ borderColor: '#ECE6F0', color: BRAND.primary, fontFamily: 'monospace' }} />
                   <button type="button" onClick={generateCode}
                     className="px-3 py-2 rounded-xl border text-xs font-medium hover:bg-purple-50 transition"
                     style={{ borderColor: BRAND.primary, color: BRAND.primary }}>
@@ -258,7 +261,7 @@ export default function CouponsPage() {
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>نوع الخصم</label>
                   <select value={form.discountType} onChange={e => setForm(f => ({ ...f, discountType: e.target.value as 'percent' | 'fixed' }))}
                     className="w-full px-3 py-2.5 rounded-xl border text-sm bg-white focus:outline-none transition"
-                    style={{ borderColor: '#E8E0F0' }}>
+                    style={{ borderColor: '#ECE6F0' }}>
                     <option value="percent">نسبة مئوية (%)</option>
                     <option value="fixed">مبلغ ثابت (ر.س)</option>
                   </select>
@@ -271,7 +274,7 @@ export default function CouponsPage() {
                     max={form.discountType === 'percent' ? '100' : undefined}
                     value={form.discountValue} onChange={e => setForm(f => ({ ...f, discountValue: e.target.value }))} required
                     className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none transition"
-                    style={{ borderColor: '#E8E0F0' }} placeholder={form.discountType === 'percent' ? '20' : '50'} />
+                    style={{ borderColor: '#ECE6F0' }} placeholder={form.discountType === 'percent' ? '20' : '50'} />
                 </div>
               </div>
 
@@ -282,14 +285,14 @@ export default function CouponsPage() {
                   <input type="number" min="0" value={form.minOrderAmount}
                     onChange={e => setForm(f => ({ ...f, minOrderAmount: e.target.value }))}
                     className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none transition"
-                    style={{ borderColor: '#E8E0F0' }} placeholder="100" />
+                    style={{ borderColor: '#ECE6F0' }} placeholder="100" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>أقصى عدد استخدامات</label>
                   <input type="number" min="1" value={form.maxUses}
                     onChange={e => setForm(f => ({ ...f, maxUses: e.target.value }))}
                     className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none transition"
-                    style={{ borderColor: '#E8E0F0' }} placeholder="غير محدود" />
+                    style={{ borderColor: '#ECE6F0' }} placeholder="غير محدود" />
                 </div>
               </div>
 
@@ -299,7 +302,7 @@ export default function CouponsPage() {
                 <input type="datetime-local" value={form.expiresAt}
                   onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
                   className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none transition"
-                  style={{ borderColor: '#E8E0F0' }} />
+                  style={{ borderColor: '#ECE6F0' }} />
               </div>
 
               {/* Preview */}
@@ -319,7 +322,7 @@ export default function CouponsPage() {
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowModal(false)}
                   className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-gray-50 transition text-gray-600"
-                  style={{ borderColor: '#E8E0F0' }}>
+                  style={{ borderColor: '#ECE6F0' }}>
                   إلغاء
                 </button>
                 <button type="submit" disabled={saving}

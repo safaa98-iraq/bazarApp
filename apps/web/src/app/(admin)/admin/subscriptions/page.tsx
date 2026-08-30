@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { PLAN_CONFIGS } from '@storebuilder/types';
 
-const B = { p: '#432E54', s: '#4B4376', a: '#AE445A', soft: '#F5F0FA', border: '#E8BCB9' };
+const B = { p: '#2F2E4B', s: '#4A4767', a: '#DB6E93', soft: '#F5EFFA', border: '#FBE1EA' };
 
 const PLAN_META = {
   FREE:       { label: PLAN_CONFIGS.FREE.nameAr,        color: '#6B7280', bg: '#F3F4F6', icon: Globe,  iconColor: '#6B7280' },
@@ -97,7 +97,10 @@ function ConfirmModal({
   );
 }
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function SubscriptionsPage() {
+  useDocumentTitle('الاشتراكات');
   const [data, setData] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -178,7 +181,7 @@ export default function SubscriptionsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         {[
-          { label: 'إجمالي التجار', value: total, icon: Users, color: B.p, bg: '#EDE8F5' },
+          { label: 'إجمالي التجار', value: total, icon: Users, color: B.p, bg: '#F0E7F8' },
           { label: 'خطة احترافية', value: proCount, icon: Zap, color: '#7C3AED', bg: '#EDE9FE' },
           { label: 'خطة أعمال', value: entCount, icon: Crown, color: '#D97706', bg: '#FEF3C7' },
           { label: 'تنتهي خلال 7 أيام', value: expiring, icon: Clock, color: '#F59E0B', bg: '#FEF9C3' },
@@ -250,7 +253,7 @@ export default function SubscriptionsPage() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y" style={{ borderColor: '#F5F0FA' }}>
+            <tbody className="divide-y" style={{ borderColor: '#F5EFFA' }}>
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">

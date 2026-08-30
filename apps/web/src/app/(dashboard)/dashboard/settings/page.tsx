@@ -4,25 +4,61 @@ import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import { Globe, Eye, EyeOff, Upload, Loader2, X, Check, Zap, Crown, Building2, Lock } from 'lucide-react';
+import { Globe, Eye, EyeOff, Upload, Loader2, X, Check, Zap, Crown, Building2, Lock, Instagram, Facebook, Truck, Plus, MapPin, LinkIcon, ShieldCheck, Copy } from 'lucide-react';
 import Image from 'next/image';
 import { STORE_TYPES } from '@/lib/store-types';
 import { useAuthStore } from '@/lib/stores/auth.store';
 import { Plan, PLAN_LABELS, PLAN_COLORS } from '@/lib/plan-features';
 import { trackPage, track } from '@/lib/track';
 import { PlanPrice } from '@/components/pricing/PlanPrice';
+import { PlanGate } from '@/components/ui/PlanGate';
+import type { StoreSocialLinks, StoreDeliveryZone } from '@storebuilder/types';
+import { IRAQI_GOVERNORATES } from '@storebuilder/types';
 
-const BRAND = { primary: '#432E54', secondary: '#4B4376', accent: '#AE445A', light: '#E8BCB9' };
+const BRAND = { primary: '#2F2E4B', secondary: '#4A4767', accent: '#DB6E93', light: '#FBE1EA' };
 
 interface Store {
   id: string; name: string; slug: string; description: string | null;
   theme: string; template: string; isPublished: boolean; logo: string | null;
-  storeType: string; currency: string;
+  storeType: string; currency: string; socialLinks?: StoreSocialLinks;
+  deliveryZones?: StoreDeliveryZone[];
+  customDomain?: string | null; customDomainVerified?: boolean;
+  defaultSizeGuide?: string | null;
 }
 
+function WhatsAppGlyph({ size = 18, color = '#25D366' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path fill={color} d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.35 5.06L2 22l5.06-1.32A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm5.2 14.15c-.22.62-1.28 1.18-1.77 1.24-.45.06-1.02.08-1.65-.1-.38-.11-.87-.28-1.5-.55-2.64-1.14-4.36-3.79-4.5-3.97-.13-.18-1.08-1.44-1.08-2.74 0-1.3.68-1.94.93-2.2.24-.27.53-.33.7-.33h.5c.16 0 .38-.06.6.45.22.53.75 1.83.82 1.96.07.13.11.29.02.47-.09.18-.13.29-.26.44-.13.16-.28.35-.4.47-.13.13-.27.28-.12.55.15.27.68 1.11 1.46 1.79 1 .88 1.85 1.15 2.11 1.28.27.13.42.11.58-.07.16-.18.67-.78.85-1.05.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.27.13.44.2.51.31.07.13.07.71-.15 1.33Z" />
+    </svg>
+  );
+}
+function TikTokGlyph({ size = 18, color = '#000' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path fill={color} d="M16.8 2h-3.2v13.4a2.6 2.6 0 1 1-1.9-2.5V9.3a6 6 0 1 0 5.1 5.94V9.1a7.3 7.3 0 0 0 4.2 1.34V7.14A4.4 4.4 0 0 1 16.8 2Z" />
+    </svg>
+  );
+}
+function SnapchatGlyph({ size = 18, color = '#000' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path fill={color} d="M12 2a7 7 0 0 1 7 7c0 3.5 1 5 2 6l-2 1v1c-2 1-4 1-5 1a4.4 4.4 0 0 1-4 2 4.4 4.4 0 0 1-4-2c-1 0-3 0-5-1v-1l-2-1c1-1 2-2.5 2-6a7 7 0 0 1 7-7z" />
+    </svg>
+  );
+}
+
+const SOCIAL_FIELDS: { key: keyof Omit<StoreSocialLinks, 'deliveryPartners'>; label: string; placeholder: string; prefix?: string; bg: string; icon: React.ReactNode; dir?: 'ltr' | 'rtl' }[] = [
+  { key: 'instagram', label: 'إنستغرام', placeholder: 'اسم_المستخدم', prefix: '@', bg: 'linear-gradient(135deg,#833AB4,#DB6E93,#F5A623)', icon: <Instagram size={18} color="#fff" strokeWidth={2} />, dir: 'ltr' },
+  { key: 'whatsapp', label: 'واتساب', placeholder: '+9647xxxxxxxxx', bg: '#25D366', icon: <WhatsAppGlyph size={18} />, dir: 'ltr' },
+  { key: 'facebook', label: 'فيسبوك', placeholder: 'https://facebook.com/اسم_الصفحة', bg: '#1877F2', icon: <Facebook size={16} color="#fff" strokeWidth={2} />, dir: 'ltr' },
+  { key: 'tiktok', label: 'تيك توك', placeholder: 'اسم_المستخدم', prefix: '@', bg: '#000', icon: <TikTokGlyph size={18} color="#fff" />, dir: 'ltr' },
+  { key: 'snapchat', label: 'سناب شات', placeholder: 'اسم_المستخدم', prefix: '@', bg: '#FFFC00', icon: <SnapchatGlyph size={18} color="#000" />, dir: 'ltr' },
+];
+
 const THEMES = [
-  { color: '#432E54', label: 'بنفسجي' }, { color: '#AE445A', label: 'وردي' },
-  { color: '#4B4376', label: 'نيلي' },   { color: '#1a7f5a', label: 'أخضر' },
+  { color: '#2F2E4B', label: 'بنفسجي' }, { color: '#DB6E93', label: 'وردي' },
+  { color: '#4A4767', label: 'نيلي' },   { color: '#1a7f5a', label: 'أخضر' },
   { color: '#1d4ed8', label: 'أزرق' },   { color: '#b45309', label: 'برتقالي' },
 ];
 
@@ -61,9 +97,9 @@ function LogoUploader({ logo, onChange }: { logo: string | null; onChange: (url:
       <label className="block text-xs font-semibold mb-2" style={{ color: BRAND.primary }}>شعار المتجر</label>
       <div className="flex items-center gap-4">
         <div className="w-20 h-20 rounded-2xl overflow-hidden flex items-center justify-center border-2 flex-shrink-0"
-          style={{ borderColor: logo ? BRAND.accent : '#E8E0F0', background: logo ? 'white' : '#F5F0FA' }}>
+          style={{ borderColor: logo ? BRAND.accent : '#ECE6F0', background: logo ? 'white' : '#F5EFFA' }}>
           {logo ? <Image src={logo} alt="logo" width={80} height={80} className="w-full h-full object-contain" />
-                : <span className="text-3xl">🏪</span>}
+                : <Building2 size={30} style={{ color: BRAND.accent }} />}
         </div>
         <div className="space-y-2">
           <button type="button" onClick={() => inputRef.current?.click()}
@@ -94,9 +130,9 @@ const PLAN_DEFS = [
     color: '#6B7280',
     planKey: 'FREE' as const,
     features: [
-      { label: '75 منتج', ok: true },
+      { label: '55 منتج', ok: true },
       { label: '3 تصنيفات', ok: true },
-      { label: '2 كوبون خصم', ok: true },
+      { label: 'أكواد خصم', ok: false },
       { label: 'متجر عام', ok: true },
       { label: 'تحليلات متقدمة', ok: false },
       { label: 'مؤثرون', ok: false },
@@ -113,7 +149,8 @@ const PLAN_DEFS = [
     features: [
       { label: 'منتجات غير محدودة', ok: true },
       { label: 'تصنيفات غير محدودة', ok: true },
-      { label: 'كوبونات غير محدودة', ok: true },
+      { label: 'كود خصم واحد', ok: true },
+      { label: '5 ماركات تجارية', ok: true },
       { label: 'نوع متجر متخصص', ok: true },
       { label: 'تحليلات متقدمة', ok: true },
       { label: '10 مؤثرين', ok: true },
@@ -129,7 +166,9 @@ const PLAN_DEFS = [
     features: [
       { label: 'منتجات غير محدودة', ok: true },
       { label: 'تصنيفات غير محدودة', ok: true },
-      { label: 'كوبونات غير محدودة', ok: true },
+      { label: '5 أكواد خصم', ok: true },
+      { label: 'ماركات تجارية غير محدودة', ok: true },
+      { label: 'التعليق على المنتجات', ok: true },
       { label: 'نوع متجر متخصص', ok: true },
       { label: 'تحليلات متقدمة', ok: true },
       { label: 'مؤثرون غير محدودون', ok: true },
@@ -140,7 +179,10 @@ const PLAN_DEFS = [
   },
 ];
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function SettingsPage() {
+  useDocumentTitle('إعدادات المتجر');
   const searchParams = useSearchParams();
   const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
   const planColors = PLAN_COLORS[plan];
@@ -148,14 +190,20 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'basic' | 'type' | 'design' | 'billing'>(
-    (searchParams.get('tab') as 'basic' | 'type' | 'design' | 'billing') ?? 'basic'
+  const [activeTab, setActiveTab] = useState<'basic' | 'type' | 'design' | 'social' | 'delivery' | 'domain' | 'billing'>(
+    (searchParams.get('tab') as 'basic' | 'type' | 'design' | 'social' | 'delivery' | 'domain' | 'billing') ?? 'basic'
   );
   const [form, setForm] = useState({
     name: '', slug: '', description: '', theme: BRAND.primary,
     template: 'minimal', logo: '' as string | null,
     storeType: 'fashion', currency: 'IQD',
+    socialLinks: {} as StoreSocialLinks,
+    deliveryZones: [] as StoreDeliveryZone[],
+    domainInput: '',
+    defaultSizeGuide: '',
   });
+  const [newPartner, setNewPartner] = useState('');
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => { trackPage('settings'); }, []);
 
@@ -170,6 +218,10 @@ export default function SettingsPage() {
             theme: res.data.theme, template: res.data.template,
             logo: res.data.logo, storeType: res.data.storeType ?? 'fashion',
             currency: res.data.currency ?? 'SAR',
+            socialLinks: res.data.socialLinks ?? {},
+            deliveryZones: res.data.deliveryZones ?? [],
+            domainInput: res.data.customDomain ?? '',
+            defaultSizeGuide: res.data.defaultSizeGuide ?? '',
           });
         }
       }).catch(() => {}).finally(() => setLoading(false));
@@ -182,6 +234,9 @@ export default function SettingsPage() {
         name: form.name, description: form.description || undefined,
         theme: form.theme, template: form.template, logo: form.logo || undefined,
         storeType: form.storeType, currency: form.currency,
+        socialLinks: form.socialLinks,
+        deliveryZones: form.deliveryZones,
+        defaultSizeGuide: form.defaultSizeGuide || undefined,
         ...(!store ? { slug: form.slug } : {}),
       };
       if (store) {
@@ -192,7 +247,7 @@ export default function SettingsPage() {
       } else {
         const res = await api.post<{ success: boolean; data: Store }>('/api/stores', { ...body, slug: form.slug });
         setStore(res.data);
-        toast.success('تم إنشاء المتجر! 🎉');
+        toast.success('تم إنشاء المتجر!');
         track({ event: 'settings_saved' });
       }
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'فشل الحفظ'); }
@@ -204,14 +259,34 @@ export default function SettingsPage() {
     try {
       const res = await api.patch<{ success: boolean; data: Store }>('/api/stores/my', { isPublished: !store.isPublished });
       setStore(res.data);
-      toast.success(res.data.isPublished ? 'المتجر الآن مباشر! 🚀' : 'تم إيقاف نشر المتجر');
+      toast.success(res.data.isPublished ? 'المتجر الآن مباشر!' : 'تم إيقاف نشر المتجر');
     } catch { toast.error('فشل'); }
     finally { setPublishing(false); }
   };
 
+  const saveDomain = async () => {
+    setSaving(true);
+    try {
+      const res = await api.patch<{ success: boolean; data: Store }>('/api/stores/my', { customDomain: form.domainInput.trim() || null });
+      setStore(res.data);
+      toast.success('تم حفظ النطاق — أضف سجل التحقق ثم اضغط "تحقق الآن"');
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'فشل الحفظ'); }
+    finally { setSaving(false); }
+  };
+
+  const verifyDomain = async () => {
+    setVerifying(true);
+    try {
+      const res = await api.post<{ success: boolean; data: Store }>('/api/stores/my/verify-domain', {});
+      setStore(res.data);
+      toast.success('تم التحقق من النطاق بنجاح! متجرك الآن متاح عليه');
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'فشل التحقق'); }
+    finally { setVerifying(false); }
+  };
+
   if (loading) return (
     <div className="p-8 space-y-4">
-      {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: '#EDE8F5' }} />)}
+      {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: '#F0E7F8' }} />)}
     </div>
   );
 
@@ -233,10 +308,10 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <div className="flex gap-1 mb-5 p-1 rounded-2xl" style={{ background: '#F5F0FA' }}>
-        {[['basic', 'الأساسية'], ['type', 'النوع'], ['design', 'التصميم'], ['billing', 'الخطة']].map(([tab, label]) => (
-          <button key={tab} onClick={() => setActiveTab(tab as 'basic' | 'type' | 'design' | 'billing')}
-            className="flex-1 py-2 px-3 rounded-xl text-sm font-medium transition"
+      <div className="flex gap-1 mb-5 p-1 rounded-2xl overflow-x-auto" style={{ background: '#F5EFFA' }}>
+        {[['basic', 'الأساسية'], ['type', 'النوع'], ['design', 'التصميم'], ['social', 'التواصل'], ['delivery', 'مناطق التوصيل'], ['domain', 'النطاق المخصص'], ['billing', 'الخطة']].map(([tab, label]) => (
+          <button key={tab} onClick={() => setActiveTab(tab as 'basic' | 'type' | 'design' | 'social' | 'delivery' | 'domain' | 'billing')}
+            className="flex-shrink-0 py-2 px-3 rounded-xl text-sm font-medium transition whitespace-nowrap"
             style={{ background: activeTab === tab ? 'white' : 'transparent', color: activeTab === tab ? BRAND.primary : '#9ca3af', boxShadow: activeTab === tab ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
             {label}
           </button>
@@ -245,7 +320,7 @@ export default function SettingsPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {activeTab === 'basic' && (
-          <div className="bg-white rounded-2xl border p-6 space-y-5" style={{ borderColor: '#E8E0F0' }}>
+          <div className="bg-white rounded-2xl border p-6 space-y-5" style={{ borderColor: '#ECE6F0' }}>
             <LogoUploader logo={form.logo} onChange={url => setForm(f => ({ ...f, logo: url }))} />
 
             <div>
@@ -258,12 +333,12 @@ export default function SettingsPage() {
                 }));
               }} required placeholder="مثال: متجر الأناقة"
                 className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 transition"
-                style={{ borderColor: '#E8E0F0' }} />
+                style={{ borderColor: '#ECE6F0' }} />
             </div>
 
             <div>
               <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>رابط المتجر</label>
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ borderColor: '#E8E0F0' }}>
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ borderColor: '#ECE6F0' }}>
                 <span className="text-sm text-gray-400">/store/</span>
                 <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
                   disabled={!!store} placeholder="my-store"
@@ -277,35 +352,44 @@ export default function SettingsPage() {
               <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 rows={3} placeholder="أخبر عملاءك عن متجرك…"
                 className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none resize-none transition"
-                style={{ borderColor: '#E8E0F0' }} />
+                style={{ borderColor: '#ECE6F0' }} />
             </div>
 
             <div>
               <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>العملة</label>
               <select value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
                 className="w-full px-3 py-2.5 rounded-xl border text-sm bg-white focus:outline-none transition"
-                style={{ borderColor: '#E8E0F0' }}>
+                style={{ borderColor: '#ECE6F0' }}>
                 {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>دليل المقاسات العام (اختياري)</label>
+              <textarea value={form.defaultSizeGuide} onChange={e => setForm(f => ({ ...f, defaultSizeGuide: e.target.value }))}
+                rows={4} placeholder="مثال: S: 36-38 / M: 40-42 / L: 44-46 ..."
+                className="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none resize-none transition"
+                style={{ borderColor: '#ECE6F0' }} />
+              <p className="text-xs text-gray-400 mt-1">يظهر بصفحة أي منتج ما عنده دليل مقاسات خاص به</p>
             </div>
           </div>
         )}
 
         {activeTab === 'type' && (
-          <div className="bg-white rounded-2xl border p-6" style={{ borderColor: '#E8E0F0' }}>
+          <div className="bg-white rounded-2xl border p-6" style={{ borderColor: '#ECE6F0' }}>
             <h2 className="font-bold mb-1" style={{ color: BRAND.primary }}>نوع المتجر</h2>
             <p className="text-xs text-gray-400 mb-4">يحدد نوع المتجر وحدات قياس المنتجات والقوالب المقترحة</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {STORE_TYPES.map(type => (
                 <button key={type.id} type="button" onClick={() => setForm(f => ({ ...f, storeType: type.id, theme: type.themeColor }))}
                   className="relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 text-center transition hover:shadow-md"
-                  style={{ borderColor: form.storeType === type.id ? type.themeColor : '#E8E0F0', background: form.storeType === type.id ? `${type.themeColor}08` : 'white' }}>
+                  style={{ borderColor: form.storeType === type.id ? type.themeColor : '#ECE6F0', background: form.storeType === type.id ? `${type.themeColor}08` : 'white' }}>
                   {form.storeType === type.id && (
                     <div className="absolute top-2 left-2 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: type.themeColor }}>
                       <Check className="h-3 w-3 text-white" />
                     </div>
                   )}
-                  <span className="text-3xl">{type.icon}</span>
+                  <type.icon size={28} style={{ color: form.storeType === type.id ? type.themeColor : BRAND.secondary }} />
                   <span className="text-xs font-bold" style={{ color: form.storeType === type.id ? type.themeColor : BRAND.primary }}>{type.label}</span>
                   <span className="text-xs text-gray-400 leading-tight">{type.description}</span>
                 </button>
@@ -314,8 +398,8 @@ export default function SettingsPage() {
 
             {selectedTypeConfig && (
               <div className="mt-5 p-4 rounded-2xl" style={{ background: `${selectedTypeConfig.themeColor}08`, border: `1.5px solid ${selectedTypeConfig.themeColor}20` }}>
-                <p className="text-xs font-bold mb-2" style={{ color: selectedTypeConfig.themeColor }}>
-                  {selectedTypeConfig.icon} وحدات القياس المتاحة لـ "{selectedTypeConfig.label}"
+                <p className="text-xs font-bold mb-2 flex items-center gap-1.5" style={{ color: selectedTypeConfig.themeColor }}>
+                  <selectedTypeConfig.icon size={14} /> وحدات القياس المتاحة لـ &quot;{selectedTypeConfig.label}&quot;
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {selectedTypeConfig.unitOptions.map(u => (
@@ -332,7 +416,7 @@ export default function SettingsPage() {
         )}
 
         {activeTab === 'design' && (
-          <div className="bg-white rounded-2xl border p-6 space-y-5" style={{ borderColor: '#E8E0F0' }}>
+          <div className="bg-white rounded-2xl border p-6 space-y-5" style={{ borderColor: '#ECE6F0' }}>
             <div>
               <h2 className="font-bold mb-3" style={{ color: BRAND.primary }}>لون العلامة التجارية</h2>
               <div className="grid grid-cols-6 gap-3 mb-4">
@@ -349,11 +433,220 @@ export default function SettingsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <input type="color" value={form.theme} onChange={e => setForm(f => ({ ...f, theme: e.target.value }))}
-                  className="h-10 w-20 rounded-xl border cursor-pointer" style={{ borderColor: '#E8E0F0' }} />
+                  className="h-10 w-20 rounded-xl border cursor-pointer" style={{ borderColor: '#ECE6F0' }} />
                 <span className="text-sm font-mono text-gray-500">{form.theme}</span>
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'social' && (
+          <div className="bg-white rounded-2xl border p-6 space-y-5" style={{ borderColor: '#ECE6F0' }}>
+            <div>
+              <h2 className="font-bold mb-1" style={{ color: BRAND.primary }}>حسابات التواصل الاجتماعي</h2>
+              <p className="text-xs text-gray-400 mb-4">اربط حساباتك ليظهر رابط مباشر لها في متجرك — يستطيع زبائنك التواصل معك أو متابعتك بضغطة واحدة.</p>
+            </div>
+
+            {SOCIAL_FIELDS.map(f => (
+              <div key={f.key}>
+                <label className="flex items-center gap-2 text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>
+                  <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: f.bg }}>{f.icon}</span>
+                  {f.label}
+                </label>
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border" style={{ borderColor: '#ECE6F0' }}>
+                  {f.prefix && <span className="text-sm text-gray-400 flex-shrink-0">{f.prefix}</span>}
+                  <input
+                    value={form.socialLinks[f.key] ?? ''}
+                    onChange={e => setForm(s => ({ ...s, socialLinks: { ...s.socialLinks, [f.key]: e.target.value } }))}
+                    placeholder={f.placeholder} dir={f.dir}
+                    className="flex-1 text-sm focus:outline-none bg-transparent" style={{ color: BRAND.primary, direction: f.dir }} />
+                </div>
+              </div>
+            ))}
+
+            <div>
+              <label className="flex items-center gap-2 text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>
+                <span className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#FFF3C7' }}>
+                  <Truck size={16} color={BRAND.accent} />
+                </span>
+                شركات التوصيل
+              </label>
+              <p className="text-xs text-gray-400 mb-2">أضف أسماء شركات التوصيل التي تتعامل معها — تظهر لزبائنك كخيارات توصيل موثوقة.</p>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {(form.socialLinks.deliveryPartners ?? []).map((p, i) => (
+                  <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium" style={{ background: BRAND.light, color: BRAND.primary }}>
+                    {p}
+                    <button type="button" onClick={() => setForm(s => ({ ...s, socialLinks: { ...s.socialLinks, deliveryPartners: (s.socialLinks.deliveryPartners ?? []).filter((_, j) => j !== i) } }))}
+                      className="hover:opacity-70">
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <input value={newPartner} onChange={e => setNewPartner(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key !== 'Enter') return;
+                    e.preventDefault();
+                    const name = newPartner.trim();
+                    if (!name || (form.socialLinks.deliveryPartners ?? []).length >= 10) return;
+                    setForm(s => ({ ...s, socialLinks: { ...s.socialLinks, deliveryPartners: [...(s.socialLinks.deliveryPartners ?? []), name] } }));
+                    setNewPartner('');
+                  }}
+                  placeholder="مثال: زاجل" maxLength={50}
+                  className="flex-1 px-3 py-2.5 rounded-xl border text-sm focus:outline-none transition" style={{ borderColor: '#ECE6F0' }} />
+                <button type="button"
+                  onClick={() => {
+                    const name = newPartner.trim();
+                    if (!name || (form.socialLinks.deliveryPartners ?? []).length >= 10) return;
+                    setForm(s => ({ ...s, socialLinks: { ...s.socialLinks, deliveryPartners: [...(s.socialLinks.deliveryPartners ?? []), name] } }));
+                    setNewPartner('');
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border-2 flex-shrink-0 transition"
+                  style={{ borderColor: BRAND.primary, color: BRAND.primary }}>
+                  <Plus size={16} /> إضافة
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'delivery' && (
+          <div className="bg-white rounded-2xl border p-6 space-y-4" style={{ borderColor: '#ECE6F0' }}>
+            <div>
+              <h2 className="font-bold mb-1 flex items-center gap-2" style={{ color: BRAND.primary }}>
+                <MapPin size={18} /> مناطق التوصيل
+              </h2>
+              <p className="text-xs text-gray-400">
+                فعّل المحافظات التي توصّل إليها وحدد سعر التوصيل لكل واحدة. عند الطلب، يختار الزبون محافظته ويُضاف سعر التوصيل تلقائياً للمجموع. المحافظات غير المفعّلة لن تظهر للزبون كخيار توصيل.
+              </p>
+            </div>
+
+            <div className="divide-y" style={{ borderColor: '#ECE6F0' }}>
+              {IRAQI_GOVERNORATES.map(gov => {
+                const zone = form.deliveryZones.find(z => z.governorate === gov);
+                const enabled = Boolean(zone);
+                return (
+                  <div key={gov} className="flex items-center gap-3 py-3">
+                    <button type="button"
+                      onClick={() => setForm(s => ({
+                        ...s,
+                        deliveryZones: enabled
+                          ? s.deliveryZones.filter(z => z.governorate !== gov)
+                          : [...s.deliveryZones, { governorate: gov, price: 0 }],
+                      }))}
+                      className="w-10 h-6 rounded-full flex-shrink-0 relative transition"
+                      style={{ background: enabled ? BRAND.accent : '#ECE6F0' }}>
+                      <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ [enabled ? 'right' : 'left']: 2 } as React.CSSProperties} />
+                    </button>
+                    <span className="flex-1 text-sm font-medium" style={{ color: enabled ? BRAND.primary : '#9ca3af' }}>{gov}</span>
+                    {enabled && (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="number" min={0} step={250}
+                          value={zone?.price ?? 0}
+                          onChange={e => {
+                            const price = Math.max(0, Number(e.target.value) || 0);
+                            setForm(s => ({
+                              ...s,
+                              deliveryZones: s.deliveryZones.map(z => z.governorate === gov ? { ...z, price } : z),
+                            }));
+                          }}
+                          className="w-24 px-2.5 py-1.5 rounded-lg border text-sm text-left focus:outline-none"
+                          style={{ borderColor: '#ECE6F0', direction: 'ltr' }} />
+                        <span className="text-xs text-gray-400 flex-shrink-0">د.ع</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {form.deliveryZones.length === 0 && (
+              <p className="text-xs text-center py-2" style={{ color: BRAND.accent }}>
+                لم تفعّل أي محافظة بعد — سيستطيع كل الزبائن الطلب بلا رسوم توصيل حتى تفعّل محافظة واحدة على الأقل.
+              </p>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'domain' && (
+          <PlanGate feature="custom_domain">
+            <div className="bg-white rounded-2xl border p-6 space-y-5" style={{ borderColor: '#ECE6F0' }}>
+              <div>
+                <h2 className="font-bold mb-1 flex items-center gap-2" style={{ color: BRAND.primary }}>
+                  <LinkIcon size={18} /> النطاق المخصص
+                </h2>
+                <p className="text-xs text-gray-400">اربط متجرك بنطاقك الخاص بدلاً من رابط بازار الافتراضي.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>النطاق</label>
+                <div className="flex gap-2">
+                  <input value={form.domainInput} onChange={e => setForm(f => ({ ...f, domainInput: e.target.value }))}
+                    placeholder="shop.mystore.com" dir="ltr"
+                    className="flex-1 px-3 py-2.5 rounded-xl border text-sm focus:outline-none" style={{ borderColor: '#ECE6F0', textAlign: 'left' }} />
+                  <button type="button" onClick={saveDomain} disabled={saving}
+                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-60"
+                    style={{ background: BRAND.primary }}>
+                    {saving ? <Loader2 size={15} className="animate-spin" /> : 'حفظ'}
+                  </button>
+                </div>
+              </div>
+
+              {store?.customDomain && (
+                <div className="rounded-2xl p-4" style={{ background: store.customDomainVerified ? '#DCEEDA' : '#FFF3C7' }}>
+                  {store.customDomainVerified ? (
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck size={18} style={{ color: '#3D7C56' }} />
+                      <div>
+                        <p className="text-sm font-bold" style={{ color: '#3D7C56' }}>النطاق متصل ويعمل</p>
+                        <a href={`https://${store.customDomain}`} target="_blank" rel="noreferrer" className="text-xs underline" style={{ color: '#3D7C56' }}>
+                          {store.customDomain}
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm font-bold mb-2" style={{ color: '#92400E' }}>بانتظار التحقق من ملكية النطاق</p>
+                      <p className="text-xs mb-3" style={{ color: '#92400E' }}>
+                        أضف سجل DNS من نوع TXT في إعدادات نطاقك ({store.customDomain}) بالقيم التالية، ثم اضغط تحقق الآن (قد يستغرق الانتشار بعض الوقت):
+                      </p>
+                      <div className="bg-white rounded-xl p-3 space-y-2 text-xs font-mono" dir="ltr">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-gray-400">Name/Host:</span>
+                          <span className="flex items-center gap-1">
+                            _bazar-verify.{store.customDomain}
+                            <button type="button" onClick={() => { navigator.clipboard.writeText(`_bazar-verify.${store.customDomain}`); toast.success('تم النسخ'); }}>
+                              <Copy size={12} className="text-gray-400" />
+                            </button>
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-gray-400">Type:</span>
+                          <span>TXT</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-gray-400">Value:</span>
+                          <span className="flex items-center gap-1">
+                            bazar-verify={store.id}
+                            <button type="button" onClick={() => { navigator.clipboard.writeText(`bazar-verify=${store!.id}`); toast.success('تم النسخ'); }}>
+                              <Copy size={12} className="text-gray-400" />
+                            </button>
+                          </span>
+                        </div>
+                      </div>
+                      <button type="button" onClick={verifyDomain} disabled={verifying}
+                        className="mt-3 w-full py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-60"
+                        style={{ background: BRAND.accent }}>
+                        {verifying ? <Loader2 size={15} className="animate-spin mx-auto" /> : 'تحقق الآن'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </PlanGate>
         )}
 
         {activeTab === 'billing' && (
@@ -376,7 +669,7 @@ export default function SettingsPage() {
                 const isCurrent = plan === p.id;
                 return (
                   <div key={p.id} className="relative rounded-2xl border-2 overflow-hidden transition"
-                    style={{ borderColor: isCurrent ? p.color : '#E8E0F0', background: isCurrent ? `${p.color}06` : 'white' }}>
+                    style={{ borderColor: isCurrent ? p.color : '#ECE6F0', background: isCurrent ? `${p.color}06` : 'white' }}>
                     {p.badge && (
                       <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-xs font-bold text-white"
                         style={{ background: p.color }}>{p.badge}</div>
@@ -427,13 +720,13 @@ export default function SettingsPage() {
               })}
             </div>
 
-            <div className="rounded-2xl p-4 text-center" style={{ background: '#F5F0FA' }}>
+            <div className="rounded-2xl p-4 text-center" style={{ background: '#F5EFFA' }}>
               <p className="text-xs text-gray-500">جميع الخطط تشمل متجراً إلكترونياً كاملاً مع بوابة دفع آمنة وشهادة SSL</p>
             </div>
           </div>
         )}
 
-        {activeTab !== 'billing' && (
+        {activeTab !== 'billing' && activeTab !== 'domain' && (
         <button type="submit" disabled={saving}
           className="w-full py-3 rounded-xl font-bold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
           style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}>

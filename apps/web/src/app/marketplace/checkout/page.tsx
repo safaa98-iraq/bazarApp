@@ -17,7 +17,10 @@ type OrderResult = {
   pointsUsed: number; pointsEarned: number;
 };
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function CheckoutPage() {
+  useDocumentTitle('إتمام طلب السوق');
   const router = useRouter();
   const { items, total, clear } = useMarketplaceCart();
   const [form, setForm] = useState({
@@ -96,7 +99,7 @@ export default function CheckoutPage() {
           <div className="space-y-2 text-sm mb-6 bg-gray-50 rounded-xl p-4">
             <div className="flex justify-between">
               <span className="text-gray-500">المبلغ المدفوع</span>
-              <span className="font-bold" style={{ color: '#AE445A' }}>{formatCurrency(result.totalAmount)}</span>
+              <span className="font-bold" style={{ color: '#DB6E93' }}>{formatCurrency(result.totalAmount)}</span>
             </div>
             {result.discountAmount > 0 && (
               <div className="flex justify-between text-green-600">
@@ -114,7 +117,7 @@ export default function CheckoutPage() {
           <div className="flex gap-3">
             <Link href={`/marketplace/orders/${result.orderId}`}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white text-center transition"
-              style={{ background: '#432E54' }}>
+              style={{ background: '#2F2E4B' }}>
               تتبع الطلب
             </Link>
             <Link href="/marketplace"
@@ -201,12 +204,12 @@ export default function CheckoutPage() {
             {loyaltyAccount && loyaltyAccount.totalPoints > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <Gift className="h-4 w-4" style={{ color: '#AE445A' }} />
+                  <Gift className="h-4 w-4" style={{ color: '#DB6E93' }} />
                   <h2 className="text-sm font-bold text-gray-700">نقاط الولاء</h2>
                 </div>
                 <div className="flex items-center justify-between text-sm mb-3">
                   <span className="text-gray-500">نقاطك المتاحة</span>
-                  <span className="font-bold" style={{ color: '#432E54' }}>{loyaltyAccount.totalPoints} نقطة</span>
+                  <span className="font-bold" style={{ color: '#2F2E4B' }}>{loyaltyAccount.totalPoints} نقطة</span>
                 </div>
                 <div className="flex items-center justify-between text-sm mb-3">
                   <span className="text-gray-500">قيمة الخصم</span>
@@ -222,7 +225,7 @@ export default function CheckoutPage() {
                     onChange={e => setPointsToRedeem(Number(e.target.value))}
                     className="flex-1"
                   />
-                  <span className="text-sm font-semibold w-20 text-left" style={{ color: '#AE445A' }}>
+                  <span className="text-sm font-semibold w-20 text-left" style={{ color: '#DB6E93' }}>
                     {pointsToRedeem} نقطة
                   </span>
                 </div>
@@ -239,7 +242,7 @@ export default function CheckoutPage() {
           <div>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sticky top-20">
               <h2 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4" style={{ color: '#AE445A' }} />
+                <ShoppingCart className="h-4 w-4" style={{ color: '#DB6E93' }} />
                 ملخص الطلب
               </h2>
               <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
@@ -270,7 +273,7 @@ export default function CheckoutPage() {
                 )}
                 <div className="flex justify-between font-bold text-base pt-1">
                   <span>المبلغ النهائي</span>
-                  <span style={{ color: '#AE445A' }}>{formatCurrency(grandTotal)}</span>
+                  <span style={{ color: '#DB6E93' }}>{formatCurrency(grandTotal)}</span>
                 </div>
               </div>
 
@@ -278,7 +281,7 @@ export default function CheckoutPage() {
 
               <button type="submit" disabled={loading}
                 className="mt-4 w-full py-3 rounded-xl font-semibold text-white text-sm transition disabled:opacity-60"
-                style={{ background: '#AE445A' }}>
+                style={{ background: '#DB6E93' }}>
                 {loading ? 'جاري المعالجة...' : 'تأكيد الطلب'}
               </button>
             </div>

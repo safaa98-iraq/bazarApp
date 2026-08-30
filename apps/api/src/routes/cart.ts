@@ -1,8 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { optionalToken } from '../middleware/auth';
+import { optionalToken, verifyToken, requireRole, resolveStoreId } from '../middleware/auth';
 import prisma from '@storebuilder/database';
 
 const router = Router();
+const merchant = [verifyToken, requireRole('MERCHANT')];
+const ABANDONED_AFTER_HOURS = 3;
 
 async function getOrCreateCart(storeId: string, customerId?: string, sessionId?: string) {
   if (customerId) {
@@ -26,6 +28,66 @@ async function getOrCreateCart(storeId: string, customerId?: string, sessionId?:
   }
   return null;
 }
+
+// PUT /api/cart/:storeId/replace — full-cart sync from the client's local cart (used for abandoned-cart tracking)
+router.put(
+  '/:storeId/replace',
+  optionalToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { storeId } = req.params;
+      const sessionId = req.headers['x-session-id'] as string;
+      const items = (req.body?.items ?? []) as { productId: string; quantity: number }[];
+      const cart = await getOrCreateCart(storeId, req.user?.userId, sessionId);
+      if (!cart) { res.status(400).json({ success: false, error: 'Session ID required' }); return; }
+
+      await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+      if (items.length) {
+        const validProducts = await prisma.product.findMany({
+          where: { id: { in: items.map(i => i.productId) }, storeId, isActive: true },
+          select: { id: true },
+        });
+        const validIds = new Set(validProducts.map(p => p.id));
+        const filtered = items.filter(i => validIds.has(i.productId) && i.quantity > 0);
+        if (filtered.length) {
+          await prisma.cartItem.createMany({
+            data: filtered.map(i => ({ cartId: cart.id, productId: i.productId, quantity: i.quantity })),
+          });
+        }
+      }
+      await prisma.cart.update({ where: { id: cart.id }, data: { updatedAt: new Date() } });
+      res.json({ success: true });
+    } catch (err) { next(err); }
+  }
+);
+
+// GET /api/cart/abandoned — merchant view of stale carts with items (best-effort signal, not a guarantee)
+router.get('/abandoned', ...merchant, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const storeId = await resolveStoreId(req);
+    const threshold = new Date(Date.now() - ABANDONED_AFTER_HOURS * 3600000);
+    const carts = await prisma.cart.findMany({
+      where: { storeId, updatedAt: { lt: threshold }, items: { some: {} } },
+      include: {
+        items: { include: { product: { select: { id: true, name: true, price: true, images: true } } } },
+        customer: { select: { name: true, email: true, whatsapp: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 100,
+    });
+    const data = carts.map(c => ({
+      id: c.id,
+      customerName: c.customer?.name ?? null,
+      customerEmail: c.customer?.email ?? null,
+      customerPhone: c.customer?.whatsapp ?? null,
+      updatedAt: c.updatedAt.toISOString(),
+      itemCount: c.items.reduce((s, i) => s + i.quantity, 0),
+      total: c.items.reduce((s, i) => s + Number(i.product.price) * i.quantity, 0),
+      items: c.items.map(i => ({ productId: i.productId, name: i.product.name, quantity: i.quantity, price: Number(i.product.price), image: (i.product.images as string[])?.[0] ?? null })),
+    }));
+    res.json({ success: true, data });
+  } catch (err) { next(err); }
+});
 
 // GET /api/cart/:storeId
 router.get(

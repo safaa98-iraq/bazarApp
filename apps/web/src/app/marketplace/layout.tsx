@@ -10,10 +10,10 @@ export default function MarketplaceLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 shadow-sm" style={{ background: '#432E54' }}>
+      <header className="sticky top-0 z-50 shadow-sm" style={{ background: '#2F2E4B' }}>
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/marketplace" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: '#AE445A' }}>
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: '#DB6E93' }}>
               <Store className="h-4 w-4 text-white" />
             </div>
             <span className="text-white font-bold text-lg">سوق المتاجر</span>
@@ -24,7 +24,7 @@ export default function MarketplaceLayout({ children }: { children: React.ReactN
               <ShoppingCart className="h-5 w-5" />
               <span>السلة</span>
               {itemCount > 0 && (
-                <span className="absolute -top-1 -left-1 h-5 w-5 rounded-full text-xs font-bold flex items-center justify-center text-white" style={{ background: '#AE445A' }}>
+                <span className="absolute -top-1 -left-1 h-5 w-5 rounded-full text-xs font-bold flex items-center justify-center text-white" style={{ background: '#DB6E93' }}>
                   {itemCount > 9 ? '9+' : itemCount}
                 </span>
               )}

@@ -1,11 +1,17 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Monitor, Smartphone, Tablet, Eye, Rocket, ChevronUp, ChevronDown,
   Trash2, EyeOff, Plus, Palette, LayoutTemplate, Layers, Settings2,
   GripVertical, X, Check, ArrowRight, Upload, Loader2, HelpCircle, Info,
   Star, Image as ImageIcon, Tag, Lock, Megaphone,
+  Target, ShoppingBag, FolderOpen, Store, Minus, MessageCircle, Mail,
+  Home, Package, ShoppingCart, CheckCircle2,
+  Ruler, MousePointerClick, Save, AlertTriangle, Lightbulb, BadgeCheck,
+  Video, Crown,
+  type LucideIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -14,26 +20,23 @@ import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/auth.store';
 import { Plan } from '@/lib/plan-features';
 import { trackPage, track } from '@/lib/track';
+import { FREE_PLAN_BUILDER_EDIT_LIMIT } from '@storebuilder/types';
+import { type SectionType, type BuilderSection, BRAND, DEFAULT_SETTINGS, type StoreTemplate, STORE_TEMPLATES } from '@/lib/store-templates';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type SectionType =
-  | 'hero' | 'products' | 'categories' | 'announcement' | 'about'
-  | 'newsletter' | 'divider' | 'discount' | 'testimonials' | 'features' | 'gallery';
+const PLAN_RANK: Record<Plan, number> = { FREE: 0, PRO: 1, ENTERPRISE: 2 };
 
 type Device = 'desktop' | 'tablet' | 'mobile';
 type LeftTab = 'sections' | 'theme' | 'pages' | 'banners';
 type PageKey = 'home' | 'product' | 'cart' | 'checkout';
 
-interface BuilderSection {
-  id: string; type: SectionType; visible: boolean;
-  settings: Record<string, string | number | boolean>;
-}
-
 interface Store {
   id: string; name: string; slug: string;
   theme: string; template: string; isPublished: boolean;
   builderConfig: string | null;
+  builderEditCount?: number;
 }
 
 // Page-level configs stored as JSON keyed by PageKey
@@ -46,80 +49,21 @@ interface PagesConfig {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const BRAND = { primary: '#432E54', secondary: '#4B4376', accent: '#AE445A', light: '#E8BCB9' };
-
-const SECTION_TYPES: { type: SectionType; icon: string; label: string; desc: string; proOnly?: boolean }[] = [
-  { type: 'hero',         icon: '🎯', label: 'قسم البطل',        desc: 'بانر رئيسي مع عنوان وزر وصورة' },
-  { type: 'products',     icon: '🛍️', label: 'شبكة المنتجات',    desc: 'عرض منتجاتك بشكل جذاب' },
-  { type: 'discount',     icon: '🏷️', label: 'قسم الخصم',        desc: 'عرض كود خصم خاص' },
-  { type: 'categories',   icon: '📂', label: 'التصنيفات',         desc: 'عرض أقسام متجرك' },
-  { type: 'announcement', icon: '📢', label: 'شريط إعلاني',       desc: 'عروض وإعلانات مميزة' },
-  { type: 'about',        icon: '🏪', label: 'من نحن',            desc: 'نص تعريفي مع صورة' },
-  { type: 'divider',      icon: '➖', label: 'فاصل / مساحة',     desc: 'خط فاصل أو مسافة فارغة' },
-  { type: 'features',     icon: '⭐', label: 'مميزات المتجر',    desc: 'أبرز مزايا منتجاتك وخدمتك',    proOnly: true },
-  { type: 'testimonials', icon: '💬', label: 'آراء العملاء',     desc: 'شهادات وتقييمات العملاء',       proOnly: true },
-  { type: 'gallery',      icon: '🖼️', label: 'معرض الصور',       desc: 'شبكة صور جذابة',               proOnly: true },
-  { type: 'newsletter',   icon: '📧', label: 'النشرة البريدية',   desc: 'اجمع بريد عملائك',             proOnly: true },
+const SECTION_TYPES: { type: SectionType; icon: LucideIcon; label: string; desc: string; minPlan?: 'PRO' | 'ENTERPRISE' }[] = [
+  { type: 'hero',         icon: Target,        label: 'قسم البطل',        desc: 'بانر رئيسي مع عنوان وزر وصورة' },
+  { type: 'products',     icon: ShoppingBag,   label: 'شبكة المنتجات',    desc: 'عرض منتجاتك بشكل جذاب' },
+  { type: 'discount',     icon: Tag,           label: 'قسم الخصم',        desc: 'عرض كود خصم خاص' },
+  { type: 'categories',   icon: FolderOpen,    label: 'التصنيفات',         desc: 'عرض أقسام متجرك' },
+  { type: 'brands',       icon: BadgeCheck,    label: 'الماركات',          desc: 'عرض الماركات التجارية لمتجرك',  minPlan: 'PRO' },
+  { type: 'announcement', icon: Megaphone,     label: 'شريط إعلاني',       desc: 'عروض وإعلانات مميزة' },
+  { type: 'about',        icon: Store,         label: 'من نحن',            desc: 'نص تعريفي مع صورة' },
+  { type: 'divider',      icon: Minus,         label: 'فاصل / مساحة',     desc: 'خط فاصل أو مسافة فارغة' },
+  { type: 'features',     icon: Star,          label: 'مميزات المتجر',    desc: 'أبرز مزايا منتجاتك وخدمتك',    minPlan: 'PRO' },
+  { type: 'testimonials', icon: MessageCircle, label: 'آراء العملاء',     desc: 'شهادات وتقييمات العملاء',       minPlan: 'PRO' },
+  { type: 'gallery',      icon: ImageIcon,     label: 'معرض الصور',       desc: 'شبكة صور جذابة',               minPlan: 'PRO' },
+  { type: 'newsletter',   icon: Mail,          label: 'النشرة البريدية',   desc: 'اجمع بريد عملائك',             minPlan: 'PRO' },
+  { type: 'video',        icon: Video,         label: 'فيديو مضمّن',       desc: 'ضمّن فيديو يوتيوب أو ريلز — حصري لخطة الأعمال', minPlan: 'ENTERPRISE' },
 ];
-
-const DEFAULT_SETTINGS: Record<SectionType, Record<string, string | number | boolean>> = {
-  hero: {
-    title: 'مرحباً بك في متجرنا', subtitle: 'اكتشف أفضل المنتجات بأسعار لا تُقاوم',
-    buttonText: 'تسوق الآن', buttonUrl: '#products',
-    height: 'large', textAlign: 'center', backgroundColor: BRAND.primary,
-    backgroundImage: '', overlayOpacity: 40,
-  },
-  products: {
-    title: 'منتجاتنا المميزة', subtitle: 'اختر من بين تشكيلة واسعة من المنتجات',
-    columns: 4, limit: 8, showComparePrice: true, showAddToCart: true,
-  },
-  categories: { title: 'تصفح حسب التصنيف', style: 'grid' },
-  announcement: {
-    text: '🎉 عرض خاص! خصم 20% على جميع المنتجات — استخدم الكود WELCOME20',
-    link: '', backgroundColor: BRAND.accent, textColor: '#ffffff', dismissible: true,
-  },
-  discount: {
-    title: 'عرض خاص لفترة محدودة!',
-    subtitle: 'استخدم الكود أدناه واحصل على خصم فوري',
-    couponCode: 'SAVE20',
-    discountLabel: 'خصم 20%',
-    backgroundColor: BRAND.primary,
-    badgeColor: BRAND.accent,
-    showTimer: false,
-    expiryHours: 24,
-  },
-  features: {
-    title: 'لماذا تختارنا؟',
-    feature1Icon: '🚀', feature1Title: 'شحن سريع', feature1Desc: 'توصيل خلال 24 ساعة',
-    feature2Icon: '🔒', feature2Title: 'دفع آمن', feature2Desc: 'حماية كاملة لبياناتك',
-    feature3Icon: '💎', feature3Title: 'جودة عالية', feature3Desc: 'منتجات مضمونة ومعتمدة',
-    feature4Icon: '↩️', feature4Title: 'إرجاع مجاني', feature4Desc: 'إرجاع مجاني خلال 30 يوم',
-    columns: 4,
-  },
-  testimonials: {
-    title: 'ماذا يقول عملاؤنا',
-    review1Name: 'أحمد محمد', review1Text: 'منتجات رائعة وخدمة ممتازة، أنصح بالتجربة!', review1Stars: 5,
-    review2Name: 'سارة علي', review2Text: 'تجربة تسوق سهلة والشحن كان سريعاً جداً.', review2Stars: 5,
-    review3Name: 'خالد العمر', review3Text: 'جودة المنتج فاقت توقعاتي، شكراً جزيلاً.', review3Stars: 4,
-  },
-  gallery: {
-    title: 'معرض صورنا',
-    image1: '', image2: '', image3: '', image4: '', image5: '', image6: '',
-    columns: 3,
-  },
-  about: {
-    title: 'قصتنا',
-    content: 'نحن متجر رائد في تقديم أفضل المنتجات بجودة عالية وأسعار منافسة.',
-    imageUrl: '', imagePosition: 'right',
-  },
-  newsletter: {
-    title: 'اشترك في نشرتنا البريدية',
-    subtitle: 'احصل على أحدث العروض والمنتجات مباشرة إلى بريدك',
-    buttonText: 'اشترك الآن', placeholder: 'أدخل بريدك الإلكتروني',
-    backgroundColor: BRAND.secondary,
-  },
-  divider: { height: 40, showLine: true, lineColor: '#E8E0F0' },
-};
 
 const DEFAULT_HOME: BuilderSection[] = [
   { id: 'hero-default', type: 'hero', visible: true, settings: { ...DEFAULT_SETTINGS.hero } },
@@ -132,68 +76,11 @@ const DEFAULT_PRODUCT_SECTIONS: BuilderSection[] = [
   { id: 'testimonials-p', type: 'testimonials', visible: true, settings: { ...DEFAULT_SETTINGS.testimonials } },
 ];
 
-interface StoreTemplate {
-  id: string; label: string; icon: string; desc: string;
-  storeTypes: string[];
-  themeColor: string;
-  sections: Omit<BuilderSection, 'id'>[];
-}
-
-const STORE_TEMPLATES: StoreTemplate[] = [
-  {
-    id: 'fashion-bold',
-    label: 'الملابس والأزياء',
-    icon: '👗',
-    desc: 'تصميم جذاب للملابس والإكسسوارات',
-    storeTypes: ['fashion'],
-    themeColor: '#7C3F6B',
-    sections: [
-      { type: 'hero', visible: true, settings: { ...DEFAULT_SETTINGS.hero, backgroundColor: '#7C3F6B', title: 'أحدث صيحات الموضة', subtitle: 'كولكشن جديد كل أسبوع', buttonText: 'اكتشفي الآن', height: 'large', textAlign: 'center' } },
-      { type: 'categories', visible: true, settings: { title: 'تسوقي حسب القسم', style: 'grid' } },
-      { type: 'products', visible: true, settings: { ...DEFAULT_SETTINGS.products, title: 'الجديد والمميز', columns: 4, limit: 8 } },
-      { type: 'testimonials', visible: true, settings: { ...DEFAULT_SETTINGS.testimonials, title: 'آراء عملاؤنا' } },
-      { type: 'newsletter', visible: true, settings: { ...DEFAULT_SETTINGS.newsletter, backgroundColor: '#AE445A', title: 'كوني أول من يعرف!' } },
-    ],
-  },
-  {
-    id: 'beauty-glow',
-    label: 'البشرة والمكياج',
-    icon: '💄',
-    desc: 'تصميم أنيق لمنتجات التجميل والعناية',
-    storeTypes: ['beauty'],
-    themeColor: '#9B3A6B',
-    sections: [
-      { type: 'announcement', visible: true, settings: { text: '✨ مجموعة جديدة وصلت — عناية فائقة لبشرتك', backgroundColor: '#9B3A6B', textColor: '#ffffff', dismissible: true, link: '' } },
-      { type: 'hero', visible: true, settings: { ...DEFAULT_SETTINGS.hero, backgroundColor: '#9B3A6B', title: 'اكتشفي سر جمالك', subtitle: 'منتجات طبيعية فاخرة لعناية كاملة', buttonText: 'تسوقي الآن', height: 'large', textAlign: 'center' } },
-      { type: 'categories', visible: true, settings: { title: 'تصفحي حسب الفئة', style: 'grid' } },
-      { type: 'products', visible: true, settings: { ...DEFAULT_SETTINGS.products, title: 'الأكثر مبيعاً', columns: 4, limit: 8 } },
-      { type: 'features', visible: true, settings: { ...DEFAULT_SETTINGS.features, feature1Icon: '🌿', feature1Title: 'مكونات طبيعية', feature1Desc: 'خالية من المواد الضارة', feature2Icon: '🧪', feature2Title: 'مختبرة طبياً', feature2Desc: 'آمنة لجميع أنواع البشرة', feature3Icon: '✈️', feature3Title: 'توصيل سريع', feature3Desc: 'شحن مجاني للطلبات الكبيرة', feature4Icon: '↩️', feature4Title: 'إرجاع مجاني', feature4Desc: '30 يوم ضمان الرضا' } },
-      { type: 'testimonials', visible: true, settings: { ...DEFAULT_SETTINGS.testimonials, title: 'تجارب عملاؤنا الجميلة' } },
-    ],
-  },
-  {
-    id: 'electronics-gaming',
-    label: 'الألعاب والإلكترونيات',
-    icon: '🎮',
-    desc: 'تصميم احترافي للألعاب والأجهزة التقنية',
-    storeTypes: ['electronics'],
-    themeColor: '#1A0A2E',
-    sections: [
-      { type: 'announcement', visible: true, settings: { text: '⚡ عروض حصرية على أجهزة الألعاب — شحن مجاني للطلبات فوق 50,000 د.ع', backgroundColor: '#1A0A2E', textColor: '#ffffff', dismissible: false, link: '' } },
-      { type: 'hero', visible: true, settings: { ...DEFAULT_SETTINGS.hero, backgroundColor: '#1A0A2E', title: 'عالم الألعاب والتقنية', subtitle: 'أحدث الأجهزة وبطاقات الشحن بأفضل الأسعار', buttonText: 'تسوق الآن', height: 'large', textAlign: 'right' } },
-      { type: 'categories', visible: true, settings: { title: 'تصفح حسب الفئة', style: 'grid' } },
-      { type: 'products', visible: true, settings: { ...DEFAULT_SETTINGS.products, title: 'عروض اليوم', columns: 4, limit: 8, showComparePrice: true } },
-      { type: 'features', visible: true, settings: { ...DEFAULT_SETTINGS.features, feature1Icon: '🔧', feature1Title: 'ضمان سنة', feature1Desc: 'ضمان شامل على جميع المنتجات', feature2Icon: '🚀', feature2Title: 'شحن سريع', feature2Desc: 'توصيل خلال 48 ساعة', feature3Icon: '💯', feature3Title: 'منتجات أصلية', feature3Desc: '100% أصلية ومعتمدة', feature4Icon: '🔄', feature4Title: 'إرجاع مجاني', feature4Desc: 'إرجاع سهل خلال 14 يوم' } },
-      { type: 'testimonials', visible: true, settings: { ...DEFAULT_SETTINGS.testimonials } },
-    ],
-  },
-];
-
-const PAGE_LABELS: Record<PageKey, { icon: string; label: string; desc: string }> = {
-  home:     { icon: '🏠', label: 'الصفحة الرئيسية',   desc: 'الواجهة الرئيسية للمتجر' },
-  product:  { icon: '📦', label: 'صفحة المنتج',        desc: 'أقسام إضافية تحت المنتج' },
-  cart:     { icon: '🛒', label: 'صفحة السلة',          desc: 'تخصيص صفحة السلة' },
-  checkout: { icon: '✅', label: 'صفحة الدفع',          desc: 'إضافات على صفحة الدفع' },
+const PAGE_LABELS: Record<PageKey, { icon: LucideIcon; label: string; desc: string }> = {
+  home:     { icon: Home,         label: 'الصفحة الرئيسية',   desc: 'الواجهة الرئيسية للمتجر' },
+  product:  { icon: Package,      label: 'صفحة المنتج',        desc: 'أقسام إضافية تحت المنتج' },
+  cart:     { icon: ShoppingCart, label: 'صفحة السلة',          desc: 'تخصيص صفحة السلة' },
+  checkout: { icon: CheckCircle2, label: 'صفحة الدفع',          desc: 'إضافات على صفحة الدفع' },
 };
 
 // ── Image Uploader (inline) ───────────────────────────────────────────────────
@@ -230,7 +117,7 @@ function ImageField({ label, value, onChange }: { label: string; value: string; 
       <div className="flex gap-2">
         <input value={value} onChange={e => onChange(e.target.value)} placeholder="https://..."
           className="flex-1 px-3 py-2 text-xs rounded-xl border focus:outline-none transition"
-          style={{ borderColor: '#E8E0F0' }} />
+          style={{ borderColor: '#ECE6F0' }} />
         <button type="button" onClick={() => inputRef.current?.click()}
           className="px-3 py-2 rounded-xl border text-xs font-medium flex items-center gap-1 hover:bg-purple-50 transition"
           style={{ borderColor: BRAND.primary, color: BRAND.primary }}>
@@ -251,15 +138,15 @@ function SectionPreview({ section, isSelected, onClick, storeTheme }: {
   const s = section.settings;
   if (!section.visible) return (
     <div onClick={onClick}
-      className={`relative border-2 border-dashed rounded-lg mx-2 my-1 h-12 flex items-center justify-center cursor-pointer transition-all ${isSelected ? 'border-[#AE445A]' : 'border-gray-200'}`}
-      style={{ background: '#F5F0FA' }}>
+      className={`relative border-2 border-dashed rounded-lg mx-2 my-1 h-12 flex items-center justify-center cursor-pointer transition-all ${isSelected ? 'border-[#DB6E93]' : 'border-gray-200'}`}
+      style={{ background: '#F5EFFA' }}>
       <span className="text-xs text-gray-400 flex items-center gap-1.5"><EyeOff className="h-3 w-3" /> قسم مخفي</span>
     </div>
   );
 
   const sel = isSelected
-    ? 'outline outline-2 outline-offset-2 outline-[#AE445A]'
-    : 'outline outline-2 outline-transparent hover:outline-[#4B4376] hover:outline-offset-1';
+    ? 'outline outline-2 outline-offset-2 outline-[#DB6E93]'
+    : 'outline outline-2 outline-transparent hover:outline-[#4A4767] hover:outline-offset-1';
 
   switch (section.type) {
     case 'hero': return (
@@ -295,8 +182,12 @@ function SectionPreview({ section, isSelected, onClick, storeTheme }: {
         <p className="font-bold text-sm text-center mb-3" style={{ color: BRAND.primary }}>{String(s.title)}</p>
         <div className="grid grid-cols-4 gap-2">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="text-center p-2 rounded-xl" style={{ background: '#F5F0FA' }}>
-              <div className="text-lg mb-1">{String(s[`feature${i}Icon`] ?? '⭐')}</div>
+            <div key={i} className="text-center p-2 rounded-xl" style={{ background: '#F5EFFA' }}>
+              <div className="mb-1 flex justify-center">
+                {s[`feature${i}Icon`]
+                  ? <span className="text-lg">{String(s[`feature${i}Icon`])}</span>
+                  : <Star className="h-4 w-4" style={{ color: BRAND.accent }} />}
+              </div>
               <p className="text-xs font-semibold" style={{ color: BRAND.primary }}>{String(s[`feature${i}Title`] ?? '')}</p>
             </div>
           ))}
@@ -305,7 +196,7 @@ function SectionPreview({ section, isSelected, onClick, storeTheme }: {
     );
     case 'testimonials': return (
       <div onClick={onClick} className={`cursor-pointer transition-all rounded-lg overflow-hidden mx-2 my-1 ${sel}`}
-        style={{ background: '#F5F0FA', padding: 16 }}>
+        style={{ background: '#F5EFFA', padding: 16 }}>
         <p className="font-bold text-sm text-center mb-3" style={{ color: BRAND.primary }}>{String(s.title)}</p>
         <div className="grid grid-cols-3 gap-2">
           {[1, 2, 3].map(i => (
@@ -337,7 +228,7 @@ function SectionPreview({ section, isSelected, onClick, storeTheme }: {
         <p className="font-bold text-sm text-center mb-3" style={{ color: BRAND.primary }}>{String(s.title)}</p>
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(Number(s.columns), 4)}, 1fr)` }}>
           {Array.from({ length: Math.min(Number(s.limit), Number(s.columns) * 2) }).map((_, i) => (
-            <div key={i} className="rounded-lg overflow-hidden" style={{ background: '#F5F0FA' }}>
+            <div key={i} className="rounded-lg overflow-hidden" style={{ background: '#F5EFFA' }}>
               <div className="aspect-square" style={{ background: `linear-gradient(135deg, ${BRAND.primary}22, ${BRAND.accent}22)` }} />
               <div className="p-1.5">
                 <div className="h-2 rounded mb-1" style={{ background: '#D1C4E9', width: '80%' }} />
@@ -354,9 +245,23 @@ function SectionPreview({ section, isSelected, onClick, storeTheme }: {
         <p className="font-bold text-sm text-center mb-3" style={{ color: BRAND.primary }}>{String(s.title)}</p>
         <div className="grid grid-cols-3 gap-2">
           {['الملابس', 'الإلكترونيات', 'المنزل'].map(c => (
-            <div key={c} className="rounded-xl p-3 text-center" style={{ background: '#F5F0FA' }}>
+            <div key={c} className="rounded-xl p-3 text-center" style={{ background: '#F5EFFA' }}>
               <div className="w-8 h-8 rounded-full mx-auto mb-1.5" style={{ background: `${BRAND.accent}30` }} />
               <p className="text-xs font-medium" style={{ color: BRAND.primary }}>{c}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+    case 'brands': return (
+      <div onClick={onClick} className={`cursor-pointer transition-all rounded-lg overflow-hidden mx-2 my-1 ${sel}`}
+        style={{ background: '#fff', padding: 16 }}>
+        <p className="font-bold text-sm text-center mb-3" style={{ color: BRAND.primary }}>{String(s.title)}</p>
+        <div className="grid grid-cols-3 gap-2">
+          {['ماركة 1', 'ماركة 2', 'ماركة 3'].map(b => (
+            <div key={b} className="rounded-xl p-3 text-center" style={{ background: '#F5EFFA' }}>
+              <div className="w-8 h-8 rounded-full mx-auto mb-1.5" style={{ background: `${BRAND.accent}30` }} />
+              <p className="text-xs font-medium" style={{ color: BRAND.primary }}>{b}</p>
             </div>
           ))}
         </div>
@@ -375,7 +280,7 @@ function SectionPreview({ section, isSelected, onClick, storeTheme }: {
           {s.imagePosition === 'right' ? <>
             <div className="flex-1">
               <p className="font-bold text-sm mb-1" style={{ color: BRAND.primary }}>{String(s.title)}</p>
-              <div className="space-y-1">{[70, 90, 60].map(w => <div key={w} className="h-1.5 rounded" style={{ background: '#E8E0F0', width: `${w}%` }} />)}</div>
+              <div className="space-y-1">{[70, 90, 60].map(w => <div key={w} className="h-1.5 rounded" style={{ background: '#ECE6F0', width: `${w}%` }} />)}</div>
             </div>
             <div className="w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden" style={{ background: `${BRAND.primary}20` }}>
               {s.imageUrl && <img src={String(s.imageUrl)} alt="" className="w-full h-full object-cover" />}
@@ -386,7 +291,7 @@ function SectionPreview({ section, isSelected, onClick, storeTheme }: {
             </div>
             <div className="flex-1">
               <p className="font-bold text-sm mb-1" style={{ color: BRAND.primary }}>{String(s.title)}</p>
-              <div className="space-y-1">{[70, 90, 60].map(w => <div key={w} className="h-1.5 rounded" style={{ background: '#E8E0F0', width: `${w}%` }} />)}</div>
+              <div className="space-y-1">{[70, 90, 60].map(w => <div key={w} className="h-1.5 rounded" style={{ background: '#ECE6F0', width: `${w}%` }} />)}</div>
             </div>
           </>}
         </div>
@@ -406,7 +311,17 @@ function SectionPreview({ section, isSelected, onClick, storeTheme }: {
     case 'divider': return (
       <div onClick={onClick} className={`cursor-pointer transition-all rounded-lg mx-2 my-1 ${sel} flex items-center justify-center`}
         style={{ height: Number(s.height) || 40, background: 'transparent', padding: '0 16px' }}>
-        {s.showLine && <div className="w-full h-px" style={{ background: String(s.lineColor ?? '#E8E0F0') }} />}
+        {s.showLine && <div className="w-full h-px" style={{ background: String(s.lineColor ?? '#ECE6F0') }} />}
+      </div>
+    );
+    case 'video': return (
+      <div onClick={onClick} className={`cursor-pointer transition-all rounded-lg overflow-hidden mx-2 my-1 ${sel}`}
+        style={{ background: '#111', padding: 20, textAlign: 'center' }}>
+        <p className="font-bold text-sm text-white mb-3">{String(s.title)}</p>
+        <div className="flex items-center justify-center rounded-lg" style={{ background: '#000', aspectRatio: String(s.aspectRatio ?? '16:9').replace(':', '/'), maxWidth: 320, margin: '0 auto' }}>
+          <Video className="h-8 w-8 text-white opacity-50" />
+        </div>
+        {!s.videoUrl && <p className="text-xs text-white/50 mt-2">أضف رابط الفيديو من الخصائص</p>}
       </div>
     );
     default: return null;
@@ -429,7 +344,7 @@ function PropertiesPanel({ section, onChange, onClose }: {
       <input type={type} value={String(s[key] ?? '')} placeholder={placeholder}
         onChange={e => set(key, type === 'number' ? Number(e.target.value) : e.target.value)}
         className="w-full px-3 py-2 text-sm rounded-xl border focus:outline-none focus:ring-2 transition"
-        style={{ borderColor: '#E8E0F0' }} />
+        style={{ borderColor: '#ECE6F0' }} />
     </div>
   );
 
@@ -438,7 +353,7 @@ function PropertiesPanel({ section, onChange, onClose }: {
       <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>{label}</label>
       <textarea value={String(s[key] ?? '')} onChange={e => set(key, e.target.value)} rows={rows}
         className="w-full px-3 py-2 text-sm rounded-xl border focus:outline-none resize-none transition"
-        style={{ borderColor: '#E8E0F0' }} />
+        style={{ borderColor: '#ECE6F0' }} />
     </div>
   );
 
@@ -446,8 +361,8 @@ function PropertiesPanel({ section, onChange, onClose }: {
     <div className="mb-4">
       <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>{label}</label>
       <div className="flex items-center gap-2">
-        <input type="color" value={String(s[key] ?? '#432E54')} onChange={e => set(key, e.target.value)}
-          className="h-9 w-16 rounded-lg border cursor-pointer" style={{ borderColor: '#E8E0F0' }} />
+        <input type="color" value={String(s[key] ?? '#2F2E4B')} onChange={e => set(key, e.target.value)}
+          className="h-9 w-16 rounded-lg border cursor-pointer" style={{ borderColor: '#ECE6F0' }} />
         <span className="text-xs font-mono text-gray-500">{String(s[key] ?? '')}</span>
         <div className="flex gap-1 mr-auto">
           {Object.values(BRAND).map(c => (
@@ -465,7 +380,7 @@ function PropertiesPanel({ section, onChange, onClose }: {
       <label className="block text-xs font-semibold mb-1.5" style={{ color: BRAND.primary }}>{label}</label>
       <select value={String(s[key] ?? options[0].value)} onChange={e => set(key, e.target.value)}
         className="w-full px-3 py-2 text-sm rounded-xl border focus:outline-none bg-white transition"
-        style={{ borderColor: '#E8E0F0' }}>
+        style={{ borderColor: '#ECE6F0' }}>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
@@ -485,10 +400,10 @@ function PropertiesPanel({ section, onChange, onClose }: {
   const typeInfo = SECTION_TYPES.find(t => t.type === section.type)!;
 
   return (
-    <div className="h-full flex flex-col bg-white border-r border-[#E8E0F0]">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E8E0F0]">
+    <div className="h-full flex flex-col bg-white border-r border-[#ECE6F0]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#ECE6F0]">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{typeInfo.icon}</span>
+          <typeInfo.icon className="h-4 w-4" style={{ color: BRAND.primary }} />
           <span className="font-bold text-sm" style={{ color: BRAND.primary }}>{typeInfo.label}</span>
         </div>
         <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition">
@@ -530,11 +445,11 @@ function PropertiesPanel({ section, onChange, onClose }: {
           {select('columns', 'عدد الأعمدة', [
             { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '4', label: '4' },
           ])}
-          <div className="border-t border-[#E8E0F0] pt-4 mt-2">
+          <div className="border-t border-[#ECE6F0] pt-4 mt-2">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="mb-4 p-3 rounded-xl" style={{ background: '#F5F0FA' }}>
+              <div key={i} className="mb-4 p-3 rounded-xl" style={{ background: '#F5EFFA' }}>
                 <p className="text-xs font-bold mb-2" style={{ color: BRAND.primary }}>الميزة {i}</p>
-                {input(`feature${i}Icon`, 'أيقونة (إيموجي)', 'text', '⭐')}
+                {input(`feature${i}Icon`, 'أيقونة (إيموجي) — اختياري', 'text', '')}
                 {input(`feature${i}Title`, 'العنوان', 'text', 'ميزة مميزة')}
                 {input(`feature${i}Desc`, 'الوصف', 'text', 'وصف الميزة')}
               </div>
@@ -544,15 +459,15 @@ function PropertiesPanel({ section, onChange, onClose }: {
 
         {section.type === 'testimonials' && <>
           {input('title', 'عنوان القسم', 'text', 'ماذا يقول عملاؤنا')}
-          <div className="border-t border-[#E8E0F0] pt-4 mt-2">
+          <div className="border-t border-[#ECE6F0] pt-4 mt-2">
             {[1, 2, 3].map(i => (
-              <div key={i} className="mb-4 p-3 rounded-xl" style={{ background: '#F5F0FA' }}>
+              <div key={i} className="mb-4 p-3 rounded-xl" style={{ background: '#F5EFFA' }}>
                 <p className="text-xs font-bold mb-2" style={{ color: BRAND.primary }}>تقييم {i}</p>
                 {input(`review${i}Name`, 'اسم العميل', 'text', 'أحمد محمد')}
                 {textarea(`review${i}Text`, 'نص التقييم', 2)}
                 {select(`review${i}Stars`, 'التقييم', [
-                  { value: '5', label: '⭐⭐⭐⭐⭐ ممتاز' }, { value: '4', label: '⭐⭐⭐⭐ جيد جداً' },
-                  { value: '3', label: '⭐⭐⭐ جيد' },
+                  { value: '5', label: '5 نجوم — ممتاز' }, { value: '4', label: '4 نجوم — جيد جداً' },
+                  { value: '3', label: '3 نجوم — جيد' },
                 ])}
               </div>
             ))}
@@ -564,7 +479,7 @@ function PropertiesPanel({ section, onChange, onClose }: {
           {select('columns', 'عدد الأعمدة', [
             { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '4', label: '4' },
           ])}
-          <div className="border-t border-[#E8E0F0] pt-4 mt-2">
+          <div className="border-t border-[#ECE6F0] pt-4 mt-2">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <ImageField key={i} label={`صورة ${i}`} value={String(s[`image${i}`] ?? '')} onChange={v => set(`image${i}`, v)} />
             ))}
@@ -591,6 +506,17 @@ function PropertiesPanel({ section, onChange, onClose }: {
           {select('style', 'نمط العرض', [
             { value: 'grid', label: 'شبكة' }, { value: 'horizontal', label: 'أفقي' }, { value: 'cards', label: 'بطاقات' },
           ])}
+        </>}
+
+        {section.type === 'brands' && <>
+          {input('title', 'عنوان القسم', 'text', 'تسوّق حسب الماركة')}
+          {select('limit', 'عدد الماركات المعروضة', [
+            { value: '4', label: '4' }, { value: '6', label: '6' }, { value: '8', label: '8' }, { value: '12', label: '12' },
+          ])}
+          <p className="text-xs text-gray-400 mt-1">
+            يظهر هذا القسم الماركات التي أضفتها من صفحة{' '}
+            <a href="/dashboard/brands" target="_blank" rel="noreferrer" className="underline font-medium">الماركات</a>.
+          </p>
         </>}
 
         {section.type === 'announcement' && <>
@@ -623,6 +549,14 @@ function PropertiesPanel({ section, onChange, onClose }: {
           {toggle('showLine', 'إظهار خط فاصل')}
           {Boolean(s.showLine) && colorPicker('lineColor', 'لون الخط')}
         </>}
+
+        {section.type === 'video' && <>
+          {input('title', 'العنوان فوق الفيديو', 'text', 'شاهد متجرنا عن قرب')}
+          {input('videoUrl', 'رابط الفيديو (يوتيوب أو رابط MP4)', 'text', 'https://youtube.com/watch?v=...')}
+          {select('aspectRatio', 'نسبة العرض للارتفاع', [
+            { value: '16:9', label: '16:9 (أفقي)' }, { value: '9:16', label: '9:16 (ريلز/عمودي)' }, { value: '1:1', label: '1:1 (مربع)' },
+          ])}
+        </>}
       </div>
     </div>
   );
@@ -633,33 +567,33 @@ function PropertiesPanel({ section, onChange, onClose }: {
 function InstructionsOverlay({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0);
 
-  const steps = [
+  const steps: { icon: LucideIcon; color: string; title: string; desc: string; tip: string | null }[] = [
     {
-      icon: '🎨', color: '#7C3AED',
+      icon: Palette, color: '#7C3AED',
       title: 'مرحباً بك في مصمم المتجر',
       desc: 'هنا تتحكم في شكل متجرك بالكامل — بدون أي خبرة تقنية. فقط اضغط، وغيّر، وانشر!',
       tip: null,
     },
     {
-      icon: '📐', color: BRAND.primary,
+      icon: Ruler, color: BRAND.primary,
       title: 'الخطوة 1 — اختر قالباً جاهزاً',
       desc: 'انتقل إلى تبويب "التصميم" في اليسار، واضغط على أحد القوالب الجاهزة. سيُعبئ متجرك فوراً بتصميم احترافي.',
-      tip: 'القالب الموصى به لنوع متجرك سيظهر أولاً ✨',
+      tip: 'القالب الموصى به لنوع متجرك سيظهر أولاً',
     },
     {
-      icon: '📦', color: '#059669',
+      icon: Package, color: '#059669',
       title: 'الخطوة 2 — أضف أو رتّب الأقسام',
-      desc: 'في تبويب "الأقسام"، اضغط "إضافة قسم" لإضافة بانر، منتجات، آراء العملاء وأكثر. اسحب الأسهم ⬆⬇ لترتيبها.',
+      desc: 'في تبويب "الأقسام"، اضغط "إضافة قسم" لإضافة بانر، منتجات، آراء العملاء وأكثر. استخدم أزرار الأسهم لترتيبها.',
       tip: 'اضغط أي قسم في القائمة لتعديل نصوصه وألوانه من اليمين',
     },
     {
-      icon: '🖱️', color: BRAND.accent,
+      icon: MousePointerClick, color: BRAND.accent,
       title: 'الخطوة 3 — عدّل كل قسم',
       desc: 'انقر على أي قسم في لوحة القائمة اليسرى → ستظهر لك لوحة الخصائص على اليمين. عدّل العناوين، الصور، الألوان، كل شيء.',
-      tip: 'زر العين 👁 يُخفي القسم مؤقتاً دون حذفه',
+      tip: 'زر العين يُخفي القسم مؤقتاً دون حذفه',
     },
     {
-      icon: '🚀', color: '#0EA5E9',
+      icon: Rocket, color: '#0EA5E9',
       title: 'الخطوة 4 — احفظ وانشر',
       desc: 'بعد كل تعديل اضغط "حفظ" في أعلى الشاشة. عندما تكون راضياً اضغط "نشر" لتجعل متجرك مباشراً للزوار.',
       tip: 'يمكنك معاينة المتجر في أي وقت بالضغط على زر "معاينة"',
@@ -683,7 +617,7 @@ function InstructionsOverlay({ onClose }: { onClose: () => void }) {
             <div className="flex gap-1.5">
               {steps.map((_, i) => (
                 <div key={i} className="h-1.5 rounded-full transition-all"
-                  style={{ width: i === step ? 24 : 8, background: i <= step ? BRAND.accent : '#E8E0F0' }} />
+                  style={{ width: i === step ? 24 : 8, background: i <= step ? BRAND.accent : '#ECE6F0' }} />
               ))}
             </div>
             <button onClick={handleClose} className="p-1.5 rounded-xl hover:bg-gray-100 transition">
@@ -691,18 +625,18 @@ function InstructionsOverlay({ onClose }: { onClose: () => void }) {
             </button>
           </div>
           <div className="flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
               style={{ background: `${current.color}15` }}>
-              {current.icon}
+              <current.icon size={30} color={current.color} strokeWidth={1.75} />
             </div>
             <div>
               <h2 className="text-xl font-bold mb-2" style={{ color: BRAND.primary }}>{current.title}</h2>
               <p className="text-sm text-gray-600 leading-relaxed">{current.desc}</p>
             </div>
             {current.tip && (
-              <div className="w-full rounded-xl px-4 py-2.5 text-xs text-right"
-                style={{ background: '#FFF0EB', border: `1px solid #E8BCB9`, color: '#7B4F3A' }}>
-                💡 {current.tip}
+              <div className="w-full rounded-xl px-4 py-2.5 text-xs text-right flex items-center gap-2"
+                style={{ background: '#FBF9F2', border: `1px solid #FBE1EA`, color: '#7B4F3A' }}>
+                <Lightbulb className="h-3.5 w-3.5 flex-shrink-0" /> {current.tip}
               </div>
             )}
           </div>
@@ -713,15 +647,15 @@ function InstructionsOverlay({ onClose }: { onClose: () => void }) {
           {step > 0 && (
             <button onClick={() => setStep(s => s - 1)}
               className="flex-1 py-2.5 rounded-2xl text-sm font-semibold border transition hover:bg-gray-50"
-              style={{ borderColor: '#E8E0F0', color: '#6B7280' }}>
+              style={{ borderColor: '#ECE6F0', color: '#6B7280' }}>
               السابق
             </button>
           )}
           {isLast ? (
             <button onClick={handleClose}
-              className="flex-1 py-2.5 rounded-2xl text-sm font-bold text-white transition hover:opacity-90"
+              className="flex-1 py-2.5 rounded-2xl text-sm font-bold text-white transition hover:opacity-90 flex items-center justify-center gap-1.5"
               style={{ background: `linear-gradient(135deg, ${BRAND.primary}, ${BRAND.accent})` }}>
-              ابدأ التصميم 🚀
+              ابدأ التصميم <Rocket className="h-4 w-4" />
             </button>
           ) : (
             <button onClick={() => setStep(s => s + 1)}
@@ -741,9 +675,11 @@ function InstructionsOverlay({ onClose }: { onClose: () => void }) {
 
 // ── Main Builder Page ──────────────────────────────────────────────────────────
 
-export default function BuilderPage() {
+function BuilderPageContent() {
+  useDocumentTitle('بناء المتجر');
   const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
-  const isFree = plan === 'FREE';
+  const searchParams = useSearchParams();
+  const templateAppliedRef = useRef(false);
   const [store, setStore] = useState<Store | null>(null);
   const [pagesConfig, setPagesConfig] = useState<PagesConfig>({
     home: DEFAULT_HOME, product: DEFAULT_PRODUCT_SECTIONS, cart: [], checkout: [],
@@ -792,13 +728,30 @@ export default function BuilderPage() {
                 if (Array.isArray(savedBanners)) setBanners(savedBanners);
               }
             } catch { /* use defaults */ }
+          } else {
+            // Fresh store with no saved design yet — auto-apply the template chosen at registration (?template=<storeTypeId>)
+            const tplId = searchParams.get('template');
+            if (tplId && !templateAppliedRef.current) {
+              const tpl = STORE_TEMPLATES.find(t => t.storeTypes.includes(tplId));
+              if (tpl) {
+                templateAppliedRef.current = true;
+                const tplSections: BuilderSection[] = tpl.sections.map((s, i) => ({ ...s, id: `${s.type}-tpl-${i}-${Date.now()}` }));
+                setPagesConfig(prev => ({ ...prev, home: tplSections }));
+                setStoreTheme(tpl.themeColor);
+                setStoreType(tplId);
+                api.patch('/api/stores/my', { theme: tpl.themeColor, storeType: tplId }).catch(() => {});
+                toast.success(`تم تطبيق قالب "${tpl.label}" تلقائياً — عدّله كما تحب ثم احفظ`);
+              }
+            }
           }
         }
       }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const sections = pagesConfig[currentPage];
   const selectedSection = sections.find(s => s.id === selectedId) ?? null;
+  const CurrentPageIcon = PAGE_LABELS[currentPage].icon;
 
   const markDirty = () => setIsDirty(true);
 
@@ -825,8 +778,8 @@ export default function BuilderPage() {
 
   const addSection = (type: SectionType) => {
     const st = SECTION_TYPES.find(s => s.type === type);
-    if (st?.proOnly && isFree) {
-      toast.error('هذا القسم متاح في الخطة الاحترافية فقط');
+    if (st?.minPlan && PLAN_RANK[plan] < PLAN_RANK[st.minPlan]) {
+      toast.error(st.minPlan === 'ENTERPRISE' ? 'هذا القسم حصري لخطة الأعمال' : 'هذا القسم متاح في الخطة الاحترافية فما فوق');
       return;
     }
     const newSection: BuilderSection = {
@@ -878,40 +831,41 @@ export default function BuilderPage() {
   const save = async () => {
     if (!store) return; setSaving(true);
     try {
-      await api.patch('/api/stores/my', { builderConfig: JSON.stringify({ ...pagesConfig, banners }) });
+      const res = await api.patch<{ success: boolean; data: Store }>('/api/stores/my', { builderConfig: JSON.stringify({ ...pagesConfig, banners }) });
+      setStore(s => s ? { ...s, builderEditCount: res.data.builderEditCount } : s);
       setIsDirty(false); toast.success('تم الحفظ بنجاح ✓');
-    } catch { toast.error('فشل الحفظ'); }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'فشل الحفظ'); }
     finally { setSaving(false); }
   };
 
   const publish = async () => {
     if (!store) return; setPublishing(true);
     try {
-      await api.patch('/api/stores/my', { builderConfig: JSON.stringify({ ...pagesConfig, banners }), isPublished: true });
-      setStore(s => s ? { ...s, isPublished: true } : s);
+      const res = await api.patch<{ success: boolean; data: Store }>('/api/stores/my', { builderConfig: JSON.stringify({ ...pagesConfig, banners }), isPublished: true });
+      setStore(s => s ? { ...s, isPublished: true, builderEditCount: res.data.builderEditCount } : s);
       setIsDirty(false);
-      toast.success('تم النشر! متجرك الآن مباشر 🚀');
+      toast.success('تم النشر! متجرك الآن مباشر');
       track({ event: 'builder_published' });
-    } catch { toast.error('فشل النشر'); }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'فشل النشر'); }
     finally { setPublishing(false); }
   };
 
   const canvasWidth = device === 'mobile' ? 390 : device === 'tablet' ? 768 : '100%';
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#F5F0FA' }}>
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#F5EFFA' }}>
       {showInstructions && <InstructionsOverlay onClose={() => { localStorage.setItem('sb_builder_guided', '1'); setShowInstructions(false); }} />}
 
       {/* Top Bar */}
-      <header className="flex items-center justify-between px-4 py-2.5 flex-shrink-0 border-b border-[#E8E0F0] bg-white z-10">
+      <header className="flex items-center justify-between px-4 py-2.5 flex-shrink-0 border-b border-[#ECE6F0] bg-white z-10">
         <div className="flex items-center gap-3">
           <button onClick={() => window.history.back()} className="p-2 rounded-xl hover:bg-gray-100 transition">
             <ArrowRight className="h-4 w-4 text-gray-500" />
           </button>
           <div>
             <p className="text-sm font-bold" style={{ color: BRAND.primary }}>{store?.name ?? 'متجري'}</p>
-            <p className="text-xs" style={{ color: store?.isPublished ? '#10b981' : '#f59e0b' }}>
-              {store?.isPublished ? '● مباشر' : '⚠ غير منشور'}
+            <p className="text-xs flex items-center gap-1" style={{ color: store?.isPublished ? '#10b981' : '#f59e0b' }}>
+              {store?.isPublished ? '● مباشر' : <><AlertTriangle className="h-3 w-3" /> غير منشور</>}
             </p>
           </div>
           <button onClick={() => { localStorage.removeItem('sb_builder_guided'); setShowInstructions(true); }}
@@ -922,7 +876,7 @@ export default function BuilderPage() {
         </div>
 
         {/* Device Toggle */}
-        <div className="flex items-center gap-1 px-1.5 py-1 rounded-xl border border-[#E8E0F0] bg-gray-50">
+        <div className="flex items-center gap-1 px-1.5 py-1 rounded-xl border border-[#ECE6F0] bg-gray-50">
           {([['desktop', Monitor], ['tablet', Tablet], ['mobile', Smartphone]] as [Device, React.ElementType][]).map(([d, Icon]) => (
             <button key={d} onClick={() => setDevice(d)} className="p-2 rounded-lg transition"
               style={{ background: device === d ? BRAND.primary : 'transparent' }}>
@@ -932,6 +886,15 @@ export default function BuilderPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {plan === 'FREE' && store && (
+            <span className="text-xs px-2 py-1 rounded-full font-medium"
+              style={{
+                background: (store.builderEditCount ?? 0) >= FREE_PLAN_BUILDER_EDIT_LIMIT ? '#FEE2E2' : '#F5EFFA',
+                color: (store.builderEditCount ?? 0) >= FREE_PLAN_BUILDER_EDIT_LIMIT ? '#DC2626' : BRAND.secondary,
+              }}>
+              {Math.max(0, FREE_PLAN_BUILDER_EDIT_LIMIT - (store.builderEditCount ?? 0))} تعديلات متبقية من أصل {FREE_PLAN_BUILDER_EDIT_LIMIT}
+            </span>
+          )}
           {isDirty && (
             <span className="text-xs px-2 py-1 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>
               تغييرات غير محفوظة
@@ -939,7 +902,7 @@ export default function BuilderPage() {
           )}
           {store && (
             <a href={`/store/${store.slug}`} target="_blank" rel="noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-xl border border-[#E8E0F0] hover:bg-gray-50 transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-xl border border-[#ECE6F0] hover:bg-gray-50 transition"
               style={{ color: BRAND.secondary }}>
               <Eye className="h-4 w-4" /> معاينة
             </a>
@@ -960,9 +923,9 @@ export default function BuilderPage() {
 
       {/* Quick tips strip — shown until user dismisses */}
       {!store?.isPublished && sections.length < 3 && (
-        <div className="flex items-center gap-4 px-4 py-2 text-xs border-b border-[#E8E0F0] flex-shrink-0 overflow-x-auto"
+        <div className="flex items-center gap-4 px-4 py-2 text-xs border-b border-[#ECE6F0] flex-shrink-0 overflow-x-auto"
           style={{ background: '#FFF8F0' }}>
-          <span className="text-amber-600 font-semibold flex-shrink-0">💡 نصائح سريعة:</span>
+          <span className="text-amber-600 font-semibold flex-shrink-0 flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" /> نصائح سريعة:</span>
           {[
             '1. اختر قالباً من تبويب "التصميم"',
             '2. اضغط أي قسم في القائمة لتعديله',
@@ -983,8 +946,8 @@ export default function BuilderPage() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left Panel */}
-        <aside className="w-72 flex flex-col flex-shrink-0 bg-white border-l border-[#E8E0F0] overflow-hidden">
-          <div className="flex border-b border-[#E8E0F0]">
+        <aside className="w-72 flex flex-col flex-shrink-0 bg-white border-l border-[#ECE6F0] overflow-hidden">
+          <div className="flex border-b border-[#ECE6F0]">
             {([
               ['sections', Layers, 'الأقسام'],
               ['theme', Palette, 'التصميم'],
@@ -1005,9 +968,9 @@ export default function BuilderPage() {
 
               {/* Hint: click "التصميم" first if no sections */}
               {sections.length === 0 && (
-                <div className="mx-3 mt-3 rounded-2xl overflow-hidden border" style={{ borderColor: '#E8BCB9' }}>
-                  <div className="px-3 py-2.5" style={{ background: '#FFF0EB' }}>
-                    <p className="text-xs font-bold mb-1" style={{ color: BRAND.accent }}>🚀 ابدأ من هنا</p>
+                <div className="mx-3 mt-3 rounded-2xl overflow-hidden border" style={{ borderColor: '#FBE1EA' }}>
+                  <div className="px-3 py-2.5" style={{ background: '#FBF9F2' }}>
+                    <p className="text-xs font-bold mb-1 flex items-center gap-1.5" style={{ color: BRAND.accent }}><Rocket className="h-3.5 w-3.5" /> ابدأ من هنا</p>
                     <p className="text-xs text-gray-600 leading-relaxed">
                       انتقل لتبويب <strong>التصميم</strong> واضغط على قالب جاهز — يملأ المتجر تلقائياً بكل الأقسام!
                     </p>
@@ -1023,7 +986,7 @@ export default function BuilderPage() {
               {/* Current page indicator */}
               <div className="mx-3 mt-3 mb-1 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2"
                 style={{ background: `${BRAND.primary}10`, color: BRAND.primary }}>
-                <span>{PAGE_LABELS[currentPage].icon}</span>
+                <CurrentPageIcon className="h-4 w-4" />
                 <span className="flex-1">{PAGE_LABELS[currentPage].label}</span>
                 <span className="font-normal text-gray-400">الصفحة الحالية</span>
               </div>
@@ -1041,13 +1004,13 @@ export default function BuilderPage() {
                   <p className="text-xs text-gray-400 mb-2 px-1">اضغط على أي قسم لإضافته مباشرة ↓</p>
                   <div className="grid grid-cols-2 gap-2">
                     {SECTION_TYPES.map(st => {
-                      const locked = st.proOnly && isFree;
+                      const locked = !!st.minPlan && PLAN_RANK[plan] < PLAN_RANK[st.minPlan];
                       return (
                         <div key={st.type} className="relative">
                           <button onClick={() => addSection(st.type)}
-                            className={`w-full flex flex-col items-center gap-1 p-3 rounded-xl border-2 text-center transition ${locked ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#AE445A] hover:shadow-sm'}`}
-                            style={{ borderColor: locked ? '#E8E0F0' : BRAND.light, background: locked ? '#F9F9F9' : '#FBF8FF' }}>
-                            <span className="text-xl">{st.icon}</span>
+                            className={`w-full flex flex-col items-center gap-1 p-3 rounded-xl border-2 text-center transition ${locked ? 'opacity-60 cursor-not-allowed' : 'hover:border-[#DB6E93] hover:shadow-sm'}`}
+                            style={{ borderColor: locked ? '#ECE6F0' : BRAND.light, background: locked ? '#F9F9F9' : '#FBF8FF' }}>
+                            <st.icon className="h-5 w-5" style={{ color: locked ? '#9CA3AF' : BRAND.accent }} />
                             <span className="text-xs font-semibold" style={{ color: locked ? '#9CA3AF' : BRAND.primary }}>{st.label}</span>
                             <span className="text-xs text-gray-400 leading-tight">{st.desc}</span>
                           </button>
@@ -1055,8 +1018,8 @@ export default function BuilderPage() {
                             <Link href="/dashboard/settings?tab=billing"
                               className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-xl"
                               style={{ background: 'rgba(249,245,255,0.88)' }}>
-                              <Lock className="h-4 w-4" style={{ color: '#7C3AED' }} />
-                              <span className="text-xs font-bold" style={{ color: '#7C3AED' }}>PRO</span>
+                              {st.minPlan === 'ENTERPRISE' ? <Crown className="h-4 w-4" style={{ color: '#DB6E93' }} /> : <Lock className="h-4 w-4" style={{ color: '#7C3AED' }} />}
+                              <span className="text-xs font-bold" style={{ color: st.minPlan === 'ENTERPRISE' ? '#DB6E93' : '#7C3AED' }}>{st.minPlan}</span>
                             </Link>
                           )}
                         </div>
@@ -1081,11 +1044,11 @@ export default function BuilderPage() {
                         className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition"
                         style={{
                           background: isSelected ? `${BRAND.primary}12` : '#FAFAFA',
-                          border: `1.5px solid ${isSelected ? BRAND.primary : '#E8E0F0'}`,
+                          border: `1.5px solid ${isSelected ? BRAND.primary : '#ECE6F0'}`,
                           boxShadow: isSelected ? `0 2px 8px ${BRAND.primary}20` : 'none',
                         }}>
                         <GripVertical className="h-3.5 w-3.5 flex-shrink-0 text-gray-300" />
-                        <span className="text-base">{typeInfo?.icon}</span>
+                        <typeInfo.icon className="h-4 w-4 flex-shrink-0" style={{ color: section.visible ? BRAND.primary : '#9ca3af' }} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold truncate" style={{ color: section.visible ? BRAND.primary : '#9ca3af' }}>
                             {typeInfo?.label}
@@ -1122,9 +1085,9 @@ export default function BuilderPage() {
 
                   {/* Save reminder */}
                   {isDirty && (
-                    <div className="mt-3 px-3 py-2.5 rounded-xl text-xs text-center"
+                    <div className="mt-3 px-3 py-2.5 rounded-xl text-xs text-center flex items-center justify-center gap-1.5"
                       style={{ background: '#FEF3C7', border: '1px solid #FCD34D', color: '#92400E' }}>
-                      💾 لديك تغييرات غير محفوظة — اضغط <strong>حفظ</strong> أعلاه
+                      <Save className="h-3.5 w-3.5 flex-shrink-0" /> لديك تغييرات غير محفوظة — اضغط <strong>حفظ</strong> أعلاه
                     </div>
                   )}
                 </div>
@@ -1146,8 +1109,8 @@ export default function BuilderPage() {
                       onClick={() => applyTemplate(tpl)}
                       disabled={applyingTemplate === tpl.id}
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-right transition hover:border-opacity-70 disabled:opacity-50"
-                      style={{ borderColor: isMatch ? tpl.themeColor : '#E8E0F0', background: isMatch ? `${tpl.themeColor}08` : 'white' }}>
-                      <span className="text-xl flex-shrink-0">{tpl.icon}</span>
+                      style={{ borderColor: isMatch ? tpl.themeColor : '#ECE6F0', background: isMatch ? `${tpl.themeColor}08` : 'white' }}>
+                      <tpl.icon className="h-5 w-5 flex-shrink-0" style={{ color: tpl.themeColor }} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs font-bold" style={{ color: isMatch ? tpl.themeColor : BRAND.primary }}>{tpl.label}</span>
@@ -1165,7 +1128,7 @@ export default function BuilderPage() {
                   );
                 })}
               </div>
-              <div className="h-px mb-4" style={{ background: '#E8E0F0' }} />
+              <div className="h-px mb-4" style={{ background: '#ECE6F0' }} />
               <p className="text-xs font-bold mb-3" style={{ color: BRAND.secondary }}>لوحة الألوان</p>
               <div className="grid grid-cols-4 gap-2 mb-4">
                 {[BRAND.primary, BRAND.secondary, BRAND.accent, BRAND.light, '#1a7f5a', '#1d4ed8', '#b45309', '#0f172a'].map(c => (
@@ -1186,13 +1149,13 @@ export default function BuilderPage() {
                   setStoreTheme(e.target.value);
                   api.patch('/api/stores/my', { theme: e.target.value }).catch(() => {});
                   markDirty();
-                }} className="h-9 w-full rounded-xl border cursor-pointer" style={{ borderColor: '#E8E0F0' }} />
+                }} className="h-9 w-full rounded-xl border cursor-pointer" style={{ borderColor: '#ECE6F0' }} />
               </div>
               <p className="text-xs font-bold mb-3" style={{ color: BRAND.secondary }}>الخطوط</p>
               <div className="space-y-2">
                 {[{ name: 'Cairo', label: 'القاهرة (افتراضي)' }, { name: 'Tajawal', label: 'تجول' }, { name: 'Almarai', label: 'المراعي' }].map(f => (
-                  <button key={f.name} className="w-full text-right px-3 py-2.5 rounded-xl border-2 text-sm transition hover:border-[#AE445A]"
-                    style={{ borderColor: '#E8E0F0', fontFamily: f.name }}>
+                  <button key={f.name} className="w-full text-right px-3 py-2.5 rounded-xl border-2 text-sm transition hover:border-[#DB6E93]"
+                    style={{ borderColor: '#ECE6F0', fontFamily: f.name }}>
                     {f.label}
                   </button>
                 ))}
@@ -1215,8 +1178,8 @@ export default function BuilderPage() {
               {(Object.entries(PAGE_LABELS) as [PageKey, typeof PAGE_LABELS[PageKey]][]).map(([key, page]) => (
                 <button key={key} onClick={() => { setCurrentPage(key); setActiveTab('sections'); setSelectedId(null); }}
                   className="w-full flex items-start gap-3 px-3 py-3 rounded-xl mb-2 text-right transition"
-                  style={{ background: currentPage === key ? `${BRAND.primary}12` : 'transparent', border: `1.5px solid ${currentPage === key ? BRAND.primary : '#E8E0F0'}` }}>
-                  <span className="text-xl mt-0.5">{page.icon}</span>
+                  style={{ background: currentPage === key ? `${BRAND.primary}12` : 'transparent', border: `1.5px solid ${currentPage === key ? BRAND.primary : '#ECE6F0'}` }}>
+                  <page.icon className="h-5 w-5 mt-0.5" style={{ color: currentPage === key ? BRAND.primary : '#9ca3af' }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold" style={{ color: currentPage === key ? BRAND.primary : '#6b7280' }}>{page.label}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{page.desc}</p>
@@ -1230,7 +1193,7 @@ export default function BuilderPage() {
 
               {/* Page tips */}
               <div className="mt-4 p-3 rounded-xl" style={{ background: `${BRAND.primary}08` }}>
-                <p className="text-xs font-bold mb-1.5" style={{ color: BRAND.primary }}>💡 نصائح للصفحات</p>
+                <p className="text-xs font-bold mb-1.5 flex items-center gap-1.5" style={{ color: BRAND.primary }}><Lightbulb className="h-3.5 w-3.5" /> نصائح للصفحات</p>
                 <ul className="text-xs text-gray-500 space-y-1 leading-relaxed">
                   <li>• <strong>الرئيسية:</strong> أضف بطلاً وعروضاً وشهادات</li>
                   <li>• <strong>المنتج:</strong> ميزات ومراجعات أسفل المنتج</li>
@@ -1260,7 +1223,7 @@ export default function BuilderPage() {
 
               {/* Banner form */}
               {showBannerForm && (
-                <div className="mb-4 p-3 rounded-xl border border-[#E8E0F0] bg-white space-y-2.5">
+                <div className="mb-4 p-3 rounded-xl border border-[#ECE6F0] bg-white space-y-2.5">
                   <p className="text-xs font-bold" style={{ color: BRAND.primary }}>
                     {editingBannerId ? 'تعديل البانر' : 'بانر جديد'}
                   </p>
@@ -1270,7 +1233,7 @@ export default function BuilderPage() {
                       value={bannerForm.title}
                       onChange={e => setBannerForm(f => ({ ...f, title: e.target.value }))}
                       placeholder="مثال: خصم 20% على كل المنتجات"
-                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#E8E0F0] focus:outline-none focus:border-[#AE445A]"
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#ECE6F0] focus:outline-none focus:border-[#DB6E93]"
                     />
                   </div>
                   <div>
@@ -1279,7 +1242,7 @@ export default function BuilderPage() {
                       value={bannerForm.subtitle}
                       onChange={e => setBannerForm(f => ({ ...f, subtitle: e.target.value }))}
                       placeholder="مثال: استخدم الكود SAVE20"
-                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#E8E0F0] focus:outline-none focus:border-[#AE445A]"
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#ECE6F0] focus:outline-none focus:border-[#DB6E93]"
                     />
                   </div>
                   <div>
@@ -1288,7 +1251,7 @@ export default function BuilderPage() {
                       value={bannerForm.link}
                       onChange={e => setBannerForm(f => ({ ...f, link: e.target.value }))}
                       placeholder="https://..."
-                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#E8E0F0] focus:outline-none focus:border-[#AE445A]"
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#ECE6F0] focus:outline-none focus:border-[#DB6E93]"
                     />
                   </div>
                   <div className="flex gap-3">
@@ -1296,13 +1259,13 @@ export default function BuilderPage() {
                       <label className="block text-xs text-gray-500 mb-1">لون الخلفية</label>
                       <input type="color" value={bannerForm.bgColor}
                         onChange={e => setBannerForm(f => ({ ...f, bgColor: e.target.value }))}
-                        className="h-9 w-full rounded-xl border border-[#E8E0F0] cursor-pointer" />
+                        className="h-9 w-full rounded-xl border border-[#ECE6F0] cursor-pointer" />
                     </div>
                     <div className="flex-1">
                       <label className="block text-xs text-gray-500 mb-1">لون النص</label>
                       <input type="color" value={bannerForm.textColor}
                         onChange={e => setBannerForm(f => ({ ...f, textColor: e.target.value }))}
-                        className="h-9 w-full rounded-xl border border-[#E8E0F0] cursor-pointer" />
+                        className="h-9 w-full rounded-xl border border-[#ECE6F0] cursor-pointer" />
                     </div>
                   </div>
                   {/* Preview */}
@@ -1333,7 +1296,7 @@ export default function BuilderPage() {
                     </button>
                     <button
                       onClick={() => { setShowBannerForm(false); setEditingBannerId(null); }}
-                      className="px-3 py-2 rounded-xl text-xs font-medium border border-[#E8E0F0] hover:bg-gray-50 transition">
+                      className="px-3 py-2 rounded-xl text-xs font-medium border border-[#ECE6F0] hover:bg-gray-50 transition">
                       إلغاء
                     </button>
                   </div>
@@ -1345,12 +1308,12 @@ export default function BuilderPage() {
                 <div className="text-center py-8 text-gray-400">
                   <Megaphone className="h-8 w-8 mx-auto mb-2 text-gray-200" />
                   <p className="text-xs font-medium">لا توجد بانرات بعد</p>
-                  <p className="text-xs mt-1">اضغط "إضافة" لإنشاء بانر إعلاني</p>
+                  <p className="text-xs mt-1">اضغط &quot;إضافة&quot; لإنشاء بانر إعلاني</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {banners.map(b => (
-                    <div key={b.id} className="rounded-xl border border-[#E8E0F0] overflow-hidden">
+                    <div key={b.id} className="rounded-xl border border-[#ECE6F0] overflow-hidden">
                       {/* Color preview strip */}
                       <div className="px-3 py-2 text-center" style={{ background: b.bgColor, opacity: b.active ? 1 : 0.4 }}>
                         <p className="text-xs font-bold truncate" style={{ color: b.textColor }}>{b.title}</p>
@@ -1386,7 +1349,7 @@ export default function BuilderPage() {
               )}
 
               <div className="mt-4 p-3 rounded-xl" style={{ background: `${BRAND.accent}10` }}>
-                <p className="text-xs font-bold mb-1" style={{ color: BRAND.accent }}>💡 نصيحة</p>
+                <p className="text-xs font-bold mb-1 flex items-center gap-1.5" style={{ color: BRAND.accent }}><Lightbulb className="h-3.5 w-3.5" /> نصيحة</p>
                 <p className="text-xs text-gray-500 leading-relaxed">تظهر البانرات في شريط إعلاني أعلى متجرك. استخدمها للعروض والمناسبات والكوبونات.</p>
               </div>
             </div>
@@ -1404,16 +1367,16 @@ export default function BuilderPage() {
                 <span className="font-bold text-sm" style={{ color: BRAND.primary }}>{store?.name ?? 'متجري'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-5 w-24 rounded-lg" style={{ background: '#F5F0FA' }} />
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#F5F0FA' }}>
+                <div className="h-5 w-24 rounded-lg" style={{ background: '#F5EFFA' }} />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#F5EFFA' }}>
                   <div className="w-3 h-3 rounded-full" style={{ background: '#ccc' }} />
                 </div>
               </div>
             </div>
 
             {/* Page label in canvas */}
-            <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ background: `${BRAND.primary}06`, borderColor: '#E8E0F0' }}>
-              <span className="text-sm">{PAGE_LABELS[currentPage].icon}</span>
+            <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ background: `${BRAND.primary}06`, borderColor: '#ECE6F0' }}>
+              <CurrentPageIcon className="h-3.5 w-3.5" style={{ color: BRAND.secondary }} />
               <span className="text-xs font-semibold" style={{ color: BRAND.secondary }}>{PAGE_LABELS[currentPage].label}</span>
               {currentPage !== 'home' && (
                 <span className="mr-auto text-xs px-2 py-0.5 rounded-full" style={{ background: `${BRAND.accent}15`, color: BRAND.accent }}>
@@ -1428,7 +1391,7 @@ export default function BuilderPage() {
                 <div className="py-20 text-center text-gray-400">
                   <Tag className="h-10 w-10 mx-auto mb-3 text-gray-200" />
                   <p className="text-sm font-medium">لا توجد أقسام في هذه الصفحة</p>
-                  <p className="text-xs mt-1">اضغط "إضافة قسم" من القائمة اليسرى</p>
+                  <p className="text-xs mt-1">اضغط &quot;إضافة قسم&quot; من القائمة اليسرى</p>
                 </div>
               ) : sections.map(section => (
                 <div key={section.id} onClick={e => { e.stopPropagation(); setSelectedId(section.id); }}>
@@ -1448,7 +1411,7 @@ export default function BuilderPage() {
         </main>
 
         {/* Right Properties Panel */}
-        <div className={`transition-all duration-300 flex-shrink-0 overflow-hidden border-r border-[#E8E0F0] ${selectedSection ? 'w-80' : 'w-0'}`}>
+        <div className={`transition-all duration-300 flex-shrink-0 overflow-hidden border-r border-[#ECE6F0] ${selectedSection ? 'w-80' : 'w-0'}`}>
           {selectedSection && (
             <PropertiesPanel
               section={selectedSection}
@@ -1470,5 +1433,13 @@ export default function BuilderPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function BuilderPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="h-6 w-6 animate-spin" style={{ color: BRAND.accent }} /></div>}>
+      <BuilderPageContent />
+    </Suspense>
   );
 }

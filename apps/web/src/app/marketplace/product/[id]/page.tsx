@@ -33,6 +33,10 @@ export default function ProductDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    if (listing?.name) document.title = `${listing.name} — سوق بازار`;
+  }, [listing?.name]);
+
   function handleAdd() {
     if (!listing) return;
     add({
@@ -67,7 +71,7 @@ export default function ProductDetailPage() {
     <div className="max-w-5xl mx-auto px-4 py-20 text-center text-gray-400">
       <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
       <p>المنتج غير موجود</p>
-      <Link href="/marketplace" className="mt-4 inline-block text-sm underline" style={{ color: '#AE445A' }}>
+      <Link href="/marketplace" className="mt-4 inline-block text-sm underline" style={{ color: '#DB6E93' }}>
         العودة للسوق
       </Link>
     </div>
@@ -109,7 +113,7 @@ export default function ProductDetailPage() {
         {/* Details */}
         <div>
           {listing.isFeatured && (
-            <span className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full mb-3 text-white" style={{ background: '#AE445A' }}>
+            <span className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full mb-3 text-white" style={{ background: '#DB6E93' }}>
               منتج مميز
             </span>
           )}
@@ -126,7 +130,7 @@ export default function ProductDetailPage() {
           </Link>
 
           <div className="mb-6">
-            <span className="text-3xl font-bold" style={{ color: '#AE445A' }}>{formatCurrency(listing.price)}</span>
+            <span className="text-3xl font-bold" style={{ color: '#DB6E93' }}>{formatCurrency(listing.price)}</span>
             {listing.originalPrice > listing.price && (
               <span className="mr-2 text-lg text-gray-400 line-through">{formatCurrency(listing.originalPrice)}</span>
             )}
@@ -168,7 +172,7 @@ export default function ProductDetailPage() {
               disabled={listing.stock <= 0}
               className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition"
               style={added ? { background: '#22c55e', color: 'white' }
-                : listing.stock > 0 ? { background: '#432E54', color: 'white' }
+                : listing.stock > 0 ? { background: '#2F2E4B', color: 'white' }
                 : { background: '#e5e7eb', color: '#9ca3af' }}
             >
               <ShoppingCart className="h-4 w-4" />

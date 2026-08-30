@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, ShoppingCart, Package, DollarSign, Plus, ArrowLeft, Zap, Lock } from 'lucide-react';
+import { TrendingUp, ShoppingCart, Package, DollarSign, Plus, ArrowLeft, Zap, Lock, Store, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/auth.store';
 import { Plan } from '@/lib/plan-features';
 import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { trackPage } from '@/lib/track';
 
-const BRAND = { primary: '#432E54', secondary: '#4B4376', accent: '#AE445A', light: '#E8BCB9' };
+const BRAND = { primary: '#2F2E4B', secondary: '#4A4767', accent: '#DB6E93', light: '#FBE1EA' };
 
 interface DashboardData {
   totalRevenue: number; totalOrders: number;
@@ -27,7 +27,10 @@ const statusAr: Record<string, string> = {
   PENDING: 'معلّق', PAID: 'مدفوع', SHIPPED: 'شُحن', DELIVERED: 'مُستلم', CANCELLED: 'ملغي',
 };
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function DashboardOverview() {
+  useDocumentTitle('لوحة التحكم');
   const plan = (useAuthStore(s => s.user?.plan) ?? 'FREE') as Plan;
   const isFree = plan === 'FREE';
   const [store, setStore] = useState<StoreData | null>(null);
@@ -52,7 +55,7 @@ export default function DashboardOverview() {
 
   if (loading) return (
     <div className="p-8 space-y-4">
-      {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: '#EDE8F5' }} />)}
+      {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-2xl animate-pulse" style={{ background: '#F0E7F8' }} />)}
     </div>
   );
 
@@ -60,7 +63,7 @@ export default function DashboardOverview() {
     <div className="p-8">
       <div className="max-w-md mx-auto text-center py-24">
         <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6" style={{ background: `${BRAND.primary}15` }}>
-          <span className="text-4xl">🏪</span>
+          <Store size={36} style={{ color: BRAND.primary }} />
         </div>
         <h2 className="text-2xl font-bold mb-2" style={{ color: BRAND.primary }}>أنشئ متجرك الأول</h2>
         <p className="text-gray-500 mb-8">ابدأ رحلتك التجارية الآن — يستغرق الأمر دقيقة واحدة فقط</p>
@@ -81,7 +84,7 @@ export default function DashboardOverview() {
           <p className="text-sm mt-0.5">
             {store.isPublished
               ? <span style={{ color: '#10b981' }}>● مباشر على /store/{store.slug}</span>
-              : <span style={{ color: '#f59e0b' }}>⚠ المتجر غير منشور بعد</span>}
+              : <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: 4 }}><AlertTriangle size={13} /> المتجر غير منشور بعد</span>}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -109,15 +112,15 @@ export default function DashboardOverview() {
                 <Zap className="h-5 w-5" style={{ color: '#7C3AED' }} />
               </div>
               <div>
-                <p className="font-bold text-sm" style={{ color: '#432E54' }}>أنت على الخطة المجانية</p>
+                <p className="font-bold text-sm" style={{ color: '#2F2E4B' }}>أنت على الخطة المجانية</p>
                 <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
-                  75 منتج • 3 تصنيفات • بدون تحليلات أو محادثات
+                  55 منتج • 3 تصنيفات • بدون تحليلات أو محادثات
                 </p>
               </div>
             </div>
             <Link href="/dashboard/settings?tab=billing"
               className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white transition hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #AE445A)' }}>
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #DB6E93)' }}>
               <Zap className="h-3.5 w-3.5" /> ارفع للـ PRO
             </Link>
           </div>
@@ -143,7 +146,7 @@ export default function DashboardOverview() {
           { label: 'أفضل منتج', value: data?.topProducts?.[0]?.product?.name ?? '—', icon: Package, color: BRAND.secondary, bg: `${BRAND.secondary}20` },
           { label: 'وحدات مباعة', value: String(data?.topProducts?.[0]?.totalSold ?? 0), icon: TrendingUp, color: BRAND.accent, bg: `${BRAND.accent}20` },
         ].map(({ label, value, icon: Icon, color, bg }) => (
-          <div key={label} className="bg-white rounded-2xl border p-4 transition hover:shadow-md" style={{ borderColor: '#E8E0F0' }}>
+          <div key={label} className="bg-white rounded-2xl border p-4 transition hover:shadow-md" style={{ borderColor: '#ECE6F0' }}>
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-xs text-gray-500 mb-1">{label}</p>
@@ -158,7 +161,7 @@ export default function DashboardOverview() {
       </div>
 
       {isFree && (
-        <div className="relative mb-6 rounded-2xl overflow-hidden border" style={{ borderColor: '#E8E0F0' }}>
+        <div className="relative mb-6 rounded-2xl overflow-hidden border" style={{ borderColor: '#ECE6F0' }}>
           <div className="p-5 opacity-30 pointer-events-none select-none blur-[2px]">
             <div className="grid grid-cols-3 gap-3">
               {[['إيرادات الأسبوع', '125,000 د.ع'], ['معدل التحويل', '3.4%'], ['زوار اليوم', '84']].map(([l, v]) => (
@@ -172,11 +175,11 @@ export default function DashboardOverview() {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl"
             style={{ background: 'rgba(250,245,255,0.85)' }}>
             <Lock className="h-7 w-7" style={{ color: '#7C3AED' }} />
-            <p className="font-bold text-sm" style={{ color: '#432E54' }}>التحليلات المتقدمة</p>
+            <p className="font-bold text-sm" style={{ color: '#2F2E4B' }}>التحليلات المتقدمة</p>
             <p className="text-xs text-gray-500 text-center max-w-xs px-4">إحصاءات المبيعات والزوار ومعدل التحويل متاحة في خطة PRO</p>
             <Link href="/dashboard/settings?tab=billing"
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white transition hover:opacity-90 mt-1"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #AE445A)' }}>
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #DB6E93)' }}>
               <Zap className="h-3.5 w-3.5" /> ارفع للـ PRO
             </Link>
           </div>
@@ -184,12 +187,12 @@ export default function DashboardOverview() {
       )}
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#E8E0F0' }}>
-          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#E8E0F0' }}>
+        <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#ECE6F0' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#ECE6F0' }}>
             <h2 className="font-bold" style={{ color: BRAND.primary }}>آخر الطلبات</h2>
             <Link href="/dashboard/orders" className="text-sm font-medium" style={{ color: BRAND.accent }}>عرض الكل →</Link>
           </div>
-          <div className="divide-y divide-[#F5F0FA]">
+          <div className="divide-y divide-[#F5EFFA]">
             {data?.recentOrders?.length ? data.recentOrders.map(order => (
               <div key={order.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50/50 transition">
                 <div>
@@ -207,11 +210,11 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#E8E0F0' }}>
-          <div className="px-5 py-4 border-b" style={{ borderColor: '#E8E0F0' }}>
+        <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#ECE6F0' }}>
+          <div className="px-5 py-4 border-b" style={{ borderColor: '#ECE6F0' }}>
             <h2 className="font-bold" style={{ color: BRAND.primary }}>أفضل المنتجات</h2>
           </div>
-          <div className="divide-y divide-[#F5F0FA]">
+          <div className="divide-y divide-[#F5EFFA]">
             {data?.topProducts?.length ? data.topProducts.map((tp, i) => (
               <div key={i} className="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50/50 transition">
                 <div className="flex items-center gap-3">

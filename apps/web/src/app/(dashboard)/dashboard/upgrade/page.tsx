@@ -11,8 +11,8 @@ import { PlanPrice } from '@/components/pricing/PlanPrice';
 import { WavePatternOverlay } from '@/components/ui/WavePatternOverlay';
 
 const C = {
-  bg: '#F5F0FA', bgAlt: '#FFFFFF', p: '#432E54', s: '#4B4376',
-  a: '#AE445A', text: '#1C0E2E', muted: '#7B6B8D', border: '#E8BCB9',
+  bg: '#F5EFFA', bgAlt: '#FFFFFF', p: '#2F2E4B', s: '#4A4767',
+  a: '#DB6E93', text: '#2F2E4B', muted: '#6B6A83', border: '#FBE1EA',
 };
 
 const HIDDEN_FEATURE_PATTERNS = [
@@ -39,11 +39,11 @@ interface PayConfig { qrImageUrl: string | null; bankName: string; accountName: 
 interface PayRequest { id: string; planTarget: string; status: string; adminNote: string | null; createdAt: string; }
 
 const PLAN_ICONS = { FREE: Shield, PRO: Zap, ENTERPRISE: Crown } as const;
-const PLAN_COLORS = { FREE: '#7B6B8D', PRO: '#432E54', ENTERPRISE: '#AE445A' } as const;
+const PLAN_COLORS = { FREE: '#6B6A83', PRO: '#2F2E4B', ENTERPRISE: '#DB6E93' } as const;
 const PLAN_GR = {
-  FREE: 'linear-gradient(135deg,#7B6B8D,#4B4376)',
-  PRO: 'linear-gradient(135deg,#432E54,#4B4376)',
-  ENTERPRISE: 'linear-gradient(135deg,#AE445A,#7D1935)',
+  FREE: 'linear-gradient(135deg,#6B6A83,#4A4767)',
+  PRO: 'linear-gradient(135deg,#2F2E4B,#4A4767)',
+  ENTERPRISE: 'linear-gradient(135deg,#DB6E93,#7D1935)',
 } as const;
 
 function QRModal({ plan, planData, config, onClose, onPaid }: {
@@ -65,7 +65,7 @@ function QRModal({ plan, planData, config, onClose, onPaid }: {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(10,5,20,.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: C.bgAlt, borderRadius: 28, width: '100%', maxWidth: 420, boxShadow: '0 40px 100px rgba(0,0,0,.4)', overflow: 'hidden' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.bgAlt, borderRadius: 10, width: '100%', maxWidth: 420, boxShadow: '0 40px 100px rgba(0,0,0,.4)', overflow: 'hidden' }}>
         <div style={{ background: `linear-gradient(135deg,${C.p},${C.s})`, padding: '22px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontFamily: 'var(--font-cairo)', fontWeight: 900, fontSize: 17, color: '#fff' }}>ادفع للترقية — {planData.nameAr}</div>
@@ -75,14 +75,14 @@ function QRModal({ plan, planData, config, onClose, onPaid }: {
         </div>
         <div style={{ padding: '28px 24px 32px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-            <div style={{ width: 200, height: 200, borderRadius: 20, border: `3px solid ${C.border}`, background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ width: 200, height: 200, borderRadius: 10, border: `3px solid ${C.border}`, background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
               {config.qrImageUrl ? <Image src={config.qrImageUrl} alt="QR للدفع" fill style={{ objectFit: 'contain', padding: 12 }} unoptimized /> : <QrCode size={72} color={C.muted} strokeWidth={1} />}
             </div>
           </div>
-          <div style={{ background: `${C.p}08`, border: `1px solid ${C.p}18`, borderRadius: 14, padding: '14px 18px', marginBottom: 24, textAlign: 'center' }}>
-            <div style={{ fontSize: 14, color: C.text, fontWeight: 600, lineHeight: 1.8 }}>افتح تطبيق البنك وامسح رمز QR<br /><span style={{ color: C.muted, fontWeight: 500, fontSize: 13 }}>ثم اضغط "دفعت الآن" بعد إتمام الدفع</span></div>
+          <div style={{ background: `${C.p}08`, border: `1px solid ${C.p}18`, borderRadius: 10, padding: '14px 18px', marginBottom: 24, textAlign: 'center' }}>
+            <div style={{ fontSize: 14, color: C.text, fontWeight: 600, lineHeight: 1.8 }}>افتح تطبيق البنك وامسح رمز QR<br /><span style={{ color: C.muted, fontWeight: 500, fontSize: 13 }}>ثم اضغط &quot;دفعت الآن&quot; بعد إتمام الدفع</span></div>
           </div>
-          <button onClick={handlePaid} disabled={submitting} style={{ width: '100%', padding: '16px 0', background: submitting ? 'rgba(67,46,84,.35)' : `linear-gradient(135deg,${C.p},${C.a})`, color: '#fff', fontWeight: 700, fontSize: 16, border: 'none', borderRadius: 16, cursor: submitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontFamily: 'inherit' }}>{submitting ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> جارٍ التسجيل...</> : '✓ دفعت الآن'}</button>
+          <button onClick={handlePaid} disabled={submitting} style={{ width: '100%', padding: '16px 0', background: submitting ? 'rgba(67,46,84,.35)' : `linear-gradient(135deg,${C.p},${C.a})`, color: '#fff', fontWeight: 700, fontSize: 16, border: 'none', borderRadius: 10, cursor: submitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontFamily: 'inherit' }}>{submitting ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> جارٍ التسجيل...</> : '✓ دفعت الآن'}</button>
         </div>
       </div>
     </div>
@@ -102,14 +102,14 @@ function PlanCard({ planKey, plan, current, selected, onSelect }: { planKey: str
   const visiblePlan = cleanPlan(plan);
 
   return (
-    <div onClick={() => planKey !== 'FREE' && !isActive && onSelect(planKey)} style={{ background: C.bgAlt, border: isSelected ? `2.5px solid ${color}` : `1.5px solid ${C.border}`, borderRadius: 20, padding: '22px 20px', cursor: planKey === 'FREE' || isActive ? 'default' : 'pointer', position: 'relative', transition: 'all .2s', transform: isSelected ? 'translateY(-4px)' : 'none', boxShadow: isSelected ? `0 16px 48px ${color}28` : '0 2px 12px rgba(67,46,84,.06)', flex: '1 1 240px', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-      {planKey === 'ENTERPRISE' && <div style={{ position: 'absolute', top: -13, right: 18, background: 'linear-gradient(135deg,#AE445A,#7D1935)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 5 }}><Star size={9} fill="#fff" /> الأكثر طلباً</div>}
+    <div onClick={() => planKey !== 'FREE' && !isActive && onSelect(planKey)} style={{ background: C.bgAlt, border: isSelected ? `2.5px solid ${color}` : `1.5px solid ${C.border}`, borderRadius: 10, padding: '22px 20px', cursor: planKey === 'FREE' || isActive ? 'default' : 'pointer', position: 'relative', transition: 'all .2s', transform: isSelected ? 'translateY(-4px)' : 'none', boxShadow: isSelected ? `0 16px 48px ${color}28` : '0 2px 12px rgba(67,46,84,.06)', flex: '1 1 240px', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      {planKey === 'ENTERPRISE' && <div style={{ position: 'absolute', top: -13, right: 18, background: 'linear-gradient(135deg,#DB6E93,#7D1935)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 5 }}><Star size={9} fill="#fff" /> الأكثر طلباً</div>}
       {isActive && <div style={{ position: 'absolute', top: -13, left: 18, background: '#059669', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 99 }}>خطتك الحالية</div>}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon size={20} color="#fff" strokeWidth={1.75} /></div>
+        <div style={{ width: 44, height: 44, borderRadius: 10, background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon size={20} color="#fff" strokeWidth={1.75} /></div>
         <div><div style={{ fontWeight: 800, fontSize: 16, color: C.text }}>{visiblePlan.nameAr}</div><PlanPrice plan={planKey as PlanKey} align="right" compact /></div>
       </div>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>{[{ l: 'منتج', v: visiblePlan.products }, { l: 'تصنيف', v: visiblePlan.categories }].map(({ l, v }) => <div key={l} style={{ flex: '1 1 55px', background: C.bg, borderRadius: 8, padding: '6px 8px', textAlign: 'center' }}><div style={{ fontWeight: 800, fontSize: 14, color }}>{v === -1 ? '∞' : v}</div><div style={{ fontSize: 10, color: C.muted }}>{l}</div></div>)}</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>{[{ l: 'منتج', v: visiblePlan.products }, { l: 'تصنيف', v: visiblePlan.categories }].map(({ l, v }) => <div key={l} style={{ flex: '1 1 55px', background: C.bg, borderRadius: 10, padding: '6px 8px', textAlign: 'center' }}><div style={{ fontWeight: 800, fontSize: 14, color }}>{v === -1 ? '∞' : v}</div><div style={{ fontSize: 10, color: C.muted }}>{l}</div></div>)}</div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>{visiblePlan.features.map(f => <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 16, height: 16, borderRadius: '50%', background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Check size={9} color={color} strokeWidth={3} /></div><span style={{ fontSize: 12, color: C.text }}>{f}</span></div>)}</div>
       {planKey !== 'FREE' && !isActive && <div style={{ padding: '10px 0', borderRadius: 10, textAlign: 'center', background: isSelected ? gradient : 'transparent', border: isSelected ? 'none' : `1.5px solid ${color}`, color: isSelected ? '#fff' : color, fontWeight: 700, fontSize: 13 }}>{isSelected ? '✓ محدد' : 'اختر هذه الخطة'}</div>}
       {isActive && <div style={{ padding: '10px 0', borderRadius: 10, textAlign: 'center', background: '#05966912', color: '#059669', fontWeight: 700, fontSize: 13 }}>خطتك الحالية</div>}
@@ -130,23 +130,26 @@ function CompareCell({ value, col }: { value: CellValue; col: 'FREE' | 'PRO' | '
 
 function CompareTable() {
   const headers: { key: string; label: string; price: string; color: string; gr: string; Icon: ElementType }[] = [
-    { key: 'FREE', label: 'مجاني', price: 'مجاناً', color: C.muted, gr: 'linear-gradient(135deg,#7B6B8D,#4B4376)', Icon: Shield },
-    { key: 'PRO', label: 'احترافي', price: '60,000 د.ع', color: C.s, gr: 'linear-gradient(135deg,#432E54,#4B4376)', Icon: Zap },
-    { key: 'ENTERPRISE', label: 'مؤسسي', price: '100,000 د.ع', color: C.a, gr: 'linear-gradient(135deg,#AE445A,#7D1935)', Icon: Crown },
+    { key: 'FREE', label: 'مجاني', price: 'مجاناً', color: C.muted, gr: 'linear-gradient(135deg,#6B6A83,#4A4767)', Icon: Shield },
+    { key: 'PRO', label: 'احترافي', price: '60,000 د.ع', color: C.s, gr: 'linear-gradient(135deg,#2F2E4B,#4A4767)', Icon: Zap },
+    { key: 'ENTERPRISE', label: 'مؤسسي', price: '100,000 د.ع', color: C.a, gr: 'linear-gradient(135deg,#DB6E93,#7D1935)', Icon: Crown },
   ];
 
   return (
     <div style={{ marginTop: 32, marginBottom: 4 }}>
       <div style={{ textAlign: 'center', marginBottom: 20 }}><div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>مقارنة الميزات</div><div style={{ fontSize: 13, color: C.muted }}>جميع الباقات تشمل متجر جاهز — الفرق في الأدوات</div></div>
-      <div style={{ background: C.bgAlt, border: `1.5px solid ${C.border}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(67,46,84,.07)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', borderBottom: `1.5px solid ${C.border}` }}><div style={{ padding: '16px 20px' }} />{headers.map(({ key, label, price, color, gr, Icon }) => <div key={key} style={{ padding: '12px 6px', textAlign: 'center', background: key === 'PRO' ? `${C.s}06` : key === 'ENTERPRISE' ? `${C.a}06` : 'transparent' }}><div style={{ width: 30, height: 30, borderRadius: 8, background: gr, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 6px' }}><Icon size={14} color="#fff" /></div><div style={{ fontWeight: 800, fontSize: 11, color: C.text, marginBottom: 1 }}>{label}</div><div style={{ fontSize: 10, fontWeight: 600, color }}>{price}</div></div>)}</div>
+      <div style={{ background: C.bgAlt, border: `1.5px solid ${C.border}`, borderRadius: 10, overflow: 'hidden', boxShadow: '0 4px 24px rgba(67,46,84,.07)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', borderBottom: `1.5px solid ${C.border}` }}><div style={{ padding: '16px 20px' }} />{headers.map(({ key, label, price, color, gr, Icon }) => <div key={key} style={{ padding: '12px 6px', textAlign: 'center', background: key === 'PRO' ? `${C.s}06` : key === 'ENTERPRISE' ? `${C.a}06` : 'transparent' }}><div style={{ width: 30, height: 30, borderRadius: 10, background: gr, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 6px' }}><Icon size={14} color="#fff" /></div><div style={{ fontWeight: 800, fontSize: 11, color: C.text, marginBottom: 1 }}>{label}</div><div style={{ fontSize: 10, fontWeight: 600, color }}>{price}</div></div>)}</div>
         {COMPARE_FEATURES.map((row, i) => <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 100px', borderBottom: i < COMPARE_FEATURES.length - 1 ? `1px solid ${C.border}` : 'none', background: row.highlight ? `${C.p}04` : i % 2 === 0 ? 'transparent' : `${C.bg}60` }}><div style={{ padding: '10px 20px' }}><div style={{ fontSize: 12, fontWeight: 500, color: C.text }}>{row.label}</div>{row.sub && <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{row.sub}</div>}</div>{(['FREE', 'PRO', 'ENTERPRISE'] as const).map((col, j) => <div key={col} style={{ padding: '10px 6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: j === 1 ? `${C.s}04` : j === 2 ? `${C.a}04` : 'transparent' }}><CompareCell value={row[col]} col={col} /></div>)}</div>)}
       </div>
     </div>
   );
 }
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function UpgradePage() {
+  useDocumentTitle('الباقات والترقية');
   const [plans, setPlans] = useState<PlansData | null>(null);
   const [config, setConfig] = useState<PayConfig | null>(null);
   const [currentPlan, setCurrentPlan] = useState('FREE');
@@ -189,11 +192,11 @@ export default function UpgradePage() {
         <h1 style={{ fontFamily: 'var(--font-cairo)', fontWeight: 900, fontSize: 'clamp(26px,5vw,42px)', color: C.text, margin: '0 0 10px' }}>اختر الخطة المناسبة لنمو متجرك</h1>
         <p style={{ color: C.muted, fontSize: 15, margin: 0 }}>ابدأ مجاناً، وارفع خطتك عند الحاجة إلى أدوات أكثر</p>
       </div>
-      {pendingRequest?.status === 'PENDING' && <div style={{ background: '#FEF3C7', border: '1.5px solid #F59E0B', borderRadius: 16, padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12, position: 'relative', zIndex: 1 }}><Clock size={20} color="#D97706" /><div style={{ flex: 1 }}><div style={{ fontWeight: 800, color: '#92400E', fontSize: 14 }}>لديك طلب ترقية قيد المراجعة</div><div style={{ color: '#92400E', fontSize: 12, marginTop: 2 }}>سيتم التواصل معك قريباً لتأكيد الدفع</div></div></div>}
-      {pendingRequest?.status === 'APPROVED' && <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 14, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 14 }}><CheckCircle2 size={22} color="#059669" /><div style={{ fontWeight: 700, fontSize: 14, color: '#166534' }}>✓ تم تفعيل خطتك بنجاح!</div></div>}
-      {pendingRequest?.status === 'REJECTED' && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 14, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'flex-start', gap: 14 }}><XCircle size={22} color="#DC2626" /><div><div style={{ fontWeight: 700, fontSize: 14, color: '#991B1B', marginBottom: 4 }}>تم رفض الطلب</div>{pendingRequest.adminNote && <div style={{ fontSize: 13, color: '#B91C1C' }}>{pendingRequest.adminNote}</div>}</div></div>}
+      {pendingRequest?.status === 'PENDING' && <div style={{ background: '#FEF3C7', border: '1.5px solid #F59E0B', borderRadius: 10, padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12, position: 'relative', zIndex: 1 }}><Clock size={20} color="#D97706" /><div style={{ flex: 1 }}><div style={{ fontWeight: 800, color: '#92400E', fontSize: 14 }}>لديك طلب ترقية قيد المراجعة</div><div style={{ color: '#92400E', fontSize: 12, marginTop: 2 }}>سيتم التواصل معك قريباً لتأكيد الدفع</div></div></div>}
+      {pendingRequest?.status === 'APPROVED' && <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 14 }}><CheckCircle2 size={22} color="#059669" /><div style={{ fontWeight: 700, fontSize: 14, color: '#166534' }}>✓ تم تفعيل خطتك بنجاح!</div></div>}
+      {pendingRequest?.status === 'REJECTED' && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'flex-start', gap: 14 }}><XCircle size={22} color="#DC2626" /><div><div style={{ fontWeight: 700, fontSize: 14, color: '#991B1B', marginBottom: 4 }}>تم رفض الطلب</div>{pendingRequest.adminNote && <div style={{ fontSize: 13, color: '#B91C1C' }}>{pendingRequest.adminNote}</div>}</div></div>}
       <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>{(['FREE', 'PRO', 'ENTERPRISE'] as PlanKey[]).map(k => <PlanCard key={k} planKey={k} plan={plans[k]} current={currentPlan} selected={selectedPlan} onSelect={setSelectedPlan} />)}</div>
-      {selectedPlan !== 'FREE' && selectedPlan !== currentPlan && <div style={{ textAlign: 'center', marginTop: 28, position: 'relative', zIndex: 1 }}><button onClick={() => setShowQR(true)} style={{ padding: '15px 44px', borderRadius: 16, border: 'none', background: `linear-gradient(135deg,${C.p},${C.a})`, color: '#fff', fontWeight: 800, fontSize: 16, cursor: 'pointer', boxShadow: '0 10px 30px rgba(174,68,90,.25)' }}>المتابعة للدفع</button></div>}
+      {selectedPlan !== 'FREE' && selectedPlan !== currentPlan && <div style={{ textAlign: 'center', marginTop: 28, position: 'relative', zIndex: 1 }}><button onClick={() => setShowQR(true)} style={{ padding: '15px 44px', borderRadius: 10, border: 'none', background: `linear-gradient(135deg,${C.p},${C.a})`, color: '#fff', fontWeight: 800, fontSize: 16, cursor: 'pointer', boxShadow: '0 10px 30px rgba(174,68,90,.25)' }}>المتابعة للدفع</button></div>}
       <CompareTable />
     </div>
   );

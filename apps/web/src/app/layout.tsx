@@ -1,27 +1,33 @@
 // Railway deploy marker: pricing and retired-feature cleanup.
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { Tajawal, Cairo } from 'next/font/google';
+import { Tajawal, Baloo_Bhaijaan_2 } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { FreePlanTextNormalizer } from '@/components/FreePlanTextNormalizer';
 
 const tajawal = Tajawal({
   subsets: ['arabic', 'latin'],
-  weight: ['400', '500', '700', '800'],
+  weight: ['300', '400', '500', '700', '800'],
   variable: '--font-tajawal',
   display: 'swap',
 });
 
-const cairo = Cairo({
+// Kept on the historical --font-cairo variable name — dozens of pages already
+// reference var(--font-cairo) for headings, so swapping the font family here
+// re-skins every heading in the app without touching each call site.
+const balooBhaijaan2 = Baloo_Bhaijaan_2({
   subsets: ['arabic', 'latin'],
-  weight: ['300', '400', '600', '700', '900'],
+  weight: ['500', '600', '700', '800'],
   variable: '--font-cairo',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'StoreBuilder — ابنِ متجرك الإلكتروني في 5 دقائق',
+  title: {
+    default: 'بازار — ابنِ متجرك الإلكتروني في 5 دقائق',
+    template: '%s — بازار',
+  },
   description: 'أقوى منصة تجارة إلكترونية في العراق. أنشئ متجرك بدون خبرة تقنية، واستقبل الطلبات فوراً.',
 };
 
@@ -50,7 +56,7 @@ const cleanupScript = `
     if (!node || !node.nodeValue) return;
     let value = node.nodeValue;
     productLimitPatterns.forEach((pattern) => {
-      value = value.replace(pattern, '75 منتج');
+      value = value.replace(pattern, '55 منتج');
     });
     if (value !== node.nodeValue) node.nodeValue = value;
   };
@@ -151,7 +157,7 @@ const cleanupScript = `
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${tajawal.variable} ${cairo.variable} font-[family-name:var(--font-tajawal)]`}>
+      <body className={`${tajawal.variable} ${balooBhaijaan2.variable} font-[family-name:var(--font-tajawal)]`}>
         <Script id="remove-retired-feature-copy" strategy="beforeInteractive">
           {cleanupScript}
         </Script>

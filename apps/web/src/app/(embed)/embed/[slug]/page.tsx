@@ -111,7 +111,7 @@ export default function EmbedPage() {
 
   const panelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100vh', background: bg, color: text };
   const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: `1px solid ${subtle}`, flexShrink: 0 };
-  const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 8, color: text, display: 'flex', alignItems: 'center' };
+  const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 10, color: text, display: 'flex', alignItems: 'center' };
   const body: React.CSSProperties = { flex: 1, overflowY: 'auto', padding: '16px' };
   const primaryBtn: React.CSSProperties = { width: '100%', padding: '12px', background: accent, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 15, cursor: 'pointer' };
 
@@ -126,7 +126,7 @@ export default function EmbedPage() {
   if (view === 'success') return (
     <div style={{ ...panelStyle, alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 32 }}>
       <CheckCircle size={64} style={{ color: '#10b981', marginBottom: 20 }} />
-      <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700 }}>تم استلام طلبك! 🎉</h2>
+      <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700 }}>تم استلام طلبك!</h2>
       <p style={{ margin: '0 0 8px', color: theme === 'dark' ? '#9ca3af' : '#6b7280', fontSize: 14 }}>رقم الطلب</p>
       <p style={{ margin: '0 0 24px', fontWeight: 700, fontSize: 16, color: accent }}>{orderId}</p>
       <button style={{ ...primaryBtn, width: 'auto', padding: '10px 28px' }} onClick={close}>إغلاق</button>
@@ -156,7 +156,7 @@ export default function EmbedPage() {
               required type={type} placeholder={placeholder}
               value={form[key as keyof ShippingForm]}
               onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-              style={{ width: '100%', padding: '10px 12px', border: `1px solid ${subtle}`, borderRadius: 8, background: bg, color: text, fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+              style={{ width: '100%', padding: '10px 12px', border: `1px solid ${subtle}`, borderRadius: 10, background: bg, color: text, fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
             />
           </div>
         ))}
@@ -192,18 +192,18 @@ export default function EmbedPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {cart.map(item => (
               <div key={item.product.id} style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 10, background: subtle }}>
-                <div style={{ width: 64, height: 64, borderRadius: 8, background: '#e5e7eb', overflow: 'hidden', flexShrink: 0 }}>
+                <div style={{ width: 64, height: 64, borderRadius: 10, background: '#e5e7eb', overflow: 'hidden', flexShrink: 0 }}>
                   {item.product.images[0]
                     ? <img src={item.product.images[0]} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>📦</div>}
+                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Package size={24} color="#9ca3af" /></div>}
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: 14 }}>{item.product.name}</p>
                   <p style={{ margin: '0 0 8px', color: accent, fontWeight: 700 }}>{fmt(item.product.price)}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button onClick={() => updateQty(item.product.id, -1)} style={{ ...iconBtn, width: 28, height: 28, borderRadius: 6, background: bg }}><Minus size={12} /></button>
+                    <button onClick={() => updateQty(item.product.id, -1)} style={{ ...iconBtn, width: 28, height: 28, borderRadius: 10, background: bg }}><Minus size={12} /></button>
                     <span style={{ fontWeight: 600, minWidth: 20, textAlign: 'center' }}>{item.quantity}</span>
-                    <button onClick={() => updateQty(item.product.id, 1)} style={{ ...iconBtn, width: 28, height: 28, borderRadius: 6, background: bg }}><Plus size={12} /></button>
+                    <button onClick={() => updateQty(item.product.id, 1)} style={{ ...iconBtn, width: 28, height: 28, borderRadius: 10, background: bg }}><Plus size={12} /></button>
                     <button onClick={() => removeFromCart(item.product.id)} style={{ ...iconBtn, marginRight: 'auto', color: '#ef4444' }}><Trash2 size={14} /></button>
                   </div>
                 </div>
@@ -235,10 +235,10 @@ export default function EmbedPage() {
         <button style={iconBtn} onClick={close}><X size={18} /></button>
       </div>
       <div style={body}>
-        <div style={{ aspectRatio: '1/1', borderRadius: 12, background: subtle, overflow: 'hidden', marginBottom: 16 }}>
+        <div style={{ aspectRatio: '1/1', borderRadius: 10, background: subtle, overflow: 'hidden', marginBottom: 16 }}>
           {selected.images[0]
             ? <img src={selected.images[0]} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64, color: '#9ca3af' }}>📦</div>}
+            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}><Package size={64} /></div>}
         </div>
         {selected.category && <p style={{ margin: '0 0 6px', fontSize: 12, color: accent, fontWeight: 600 }}>{selected.category.name}</p>}
         <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>{selected.name}</h2>
@@ -263,7 +263,7 @@ export default function EmbedPage() {
                 <button onClick={() => setQty(Math.min(selected.stock, qty + 1))} style={{ ...iconBtn, padding: '8px 12px' }}><Plus size={14} /></button>
               </div>
             </div>
-            <button style={primaryBtn} onClick={() => addToCart(selected, qty)}>أضف إلى السلة 🛒</button>
+            <button style={{ ...primaryBtn, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => addToCart(selected, qty)}>أضف إلى السلة <ShoppingCart size={16} /></button>
           </>
         )}
       </div>
@@ -289,11 +289,11 @@ export default function EmbedPage() {
           </div>
         ) : products.map(p => (
           <button key={p.id} onClick={() => openProduct(p)}
-            style={{ background: subtle, border: 'none', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', textAlign: 'right', padding: 0, color: text }}>
+            style={{ background: subtle, border: 'none', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', textAlign: 'right', padding: 0, color: text }}>
             <div style={{ aspectRatio: '1/1', background: theme === 'dark' ? '#1f2937' : '#e5e7eb', overflow: 'hidden' }}>
               {p.images[0]
                 ? <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>📦</div>}
+                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Package size={32} color="#9ca3af" /></div>}
             </div>
             <div style={{ padding: '10px 10px 12px' }}>
               <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{p.name}</p>

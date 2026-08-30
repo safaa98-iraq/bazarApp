@@ -5,7 +5,10 @@ import { ShoppingCart, Trash2, Minus, Plus, Store, ArrowLeft } from 'lucide-reac
 import { useMarketplaceCart } from '@/lib/stores/marketplace-cart.store';
 import { formatCurrency } from '@/lib/utils';
 
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
+
 export default function CartPage() {
+  useDocumentTitle('سلة السوق');
   const { items, remove, updateQty, total } = useMarketplaceCart();
 
   // Group by store
@@ -23,7 +26,7 @@ export default function CartPage() {
         <p className="text-gray-400 mb-6">لم تضف أي منتجات بعد</p>
         <Link href="/marketplace"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white text-sm"
-          style={{ background: '#432E54' }}>
+          style={{ background: '#2F2E4B' }}>
           <ArrowLeft className="h-4 w-4" />
           تصفح المنتجات
         </Link>
@@ -34,7 +37,7 @@ export default function CartPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-        <ShoppingCart className="h-5 w-5" style={{ color: '#AE445A' }} />
+        <ShoppingCart className="h-5 w-5" style={{ color: '#DB6E93' }} />
         سلة التسوق
         <span className="text-sm font-normal text-gray-400">({items.length} منتج)</span>
       </h1>
@@ -44,8 +47,8 @@ export default function CartPage() {
           <div key={storeId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             {/* Store header */}
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2" style={{ background: '#F8F5FF' }}>
-              <Store className="h-4 w-4" style={{ color: '#432E54' }} />
-              <span className="text-sm font-semibold" style={{ color: '#432E54' }}>{storeName}</span>
+              <Store className="h-4 w-4" style={{ color: '#2F2E4B' }} />
+              <span className="text-sm font-semibold" style={{ color: '#2F2E4B' }}>{storeName}</span>
             </div>
 
             {/* Items */}
@@ -64,7 +67,7 @@ export default function CartPage() {
                     <Link href={`/marketplace/product/${item.listingId}`} className="text-sm font-semibold text-gray-800 hover:underline line-clamp-2">
                       {item.name}
                     </Link>
-                    <p className="text-sm font-bold mt-0.5" style={{ color: '#AE445A' }}>
+                    <p className="text-sm font-bold mt-0.5" style={{ color: '#DB6E93' }}>
                       {formatCurrency(item.price * item.quantity)}
                     </p>
                     <p className="text-xs text-gray-400">{formatCurrency(item.price)} × {item.quantity} {item.unitLabel}</p>
@@ -106,11 +109,11 @@ export default function CartPage() {
         </div>
         <div className="flex justify-between font-bold mb-5">
           <span>الإجمالي</span>
-          <span style={{ color: '#AE445A' }}>{formatCurrency(total())}</span>
+          <span style={{ color: '#DB6E93' }}>{formatCurrency(total())}</span>
         </div>
         <Link href="/marketplace/checkout"
           className="block w-full text-center py-3 rounded-xl font-semibold text-white text-sm transition hover:opacity-90"
-          style={{ background: '#AE445A' }}>
+          style={{ background: '#DB6E93' }}>
           إتمام الشراء
         </Link>
         <Link href="/marketplace"
